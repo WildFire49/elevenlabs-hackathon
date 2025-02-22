@@ -1,167 +1,160 @@
 'use client';
+import Features from "@/components/Features";
+import Hero from "@/components/Hero";
+import HowItWorks from "@/components/HowItWorks";
+import MarqueeStrip from "@/components/MarqueeStrip";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { toast } from "sonner";
 
-export default function Home() {
-    const [video, setVideo] = useState(null);
-    const [prompt, setPrompt] = useState('');
-    const [isDragging, setIsDragging] = useState(false);
-    const [fileName, setFileName] = useState('');
+const Index = () => {
+  const [videoFile, setVideoFile] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showDemoVideo, setShowDemoVideo] = useState(false);
 
-    const handleDrop = (e) => {
-        e.preventDefault();
-        setIsDragging(false);
-        const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('video/')) {
-            setVideo(file);
-            setFileName(file.name);
-        }
-    };
 
-    const handleFileInput = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setVideo(file);
-            setFileName(file.name);
-        }
-    };
+  const descriptions = [
+    'Perfect for Tutorials',
+    'Ideal for Product Demos',
+    'Great for Educational Content',
+    'Engaging Marketing Videos',
+    'Professional Presentations',
+    'Training Materials'
+  ];
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0 && files[0].type.startsWith('video/')) {
+      setVideoFile(files[0]);
+      await processVideo(files[0]);
+    } else {
+      toast.error("Please upload a valid video file");
+    }
+  };
+
+
+  const processVideo = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('video', file);
+      formData.append('prompt', 'generate');
+
+      const response = await fetch('http://localhost:8000/process-video', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process video');
+      }
+
+      const result = await response.json();
+      window.location.href = `/editor/${encodeURIComponent(result.result.video_id)}`;
+    } catch (error) {
+      toast.error("Failed to process video. Please try again.");
+      console.error('Error processing video:', error);
+    }
+  };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black text-white">
-            <main className="container mx-auto px-4 py-16">
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="text-center mb-16"
-                >
-                    <h1 className="text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">
-                        Video Enhancer AI
-                    </h1>
-                    <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-                        Transform your videos with AI-powered enhancements. Upload your video and describe how you want to improve it.
-                    </p>
-                </motion.div>
-
-                <div className="max-w-4xl mx-auto">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.8, delay: 0.2 }}
-                        className="bg-gray-800/50 p-8 rounded-2xl backdrop-blur-sm shadow-xl"
-                    >
-                        <div
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                                setIsDragging(true);
-                            }}
-                            onDragLeave={(e) => {
-                                e.preventDefault();
-                                setIsDragging(false);
-                            }}
-                            onDrop={handleDrop}
-                            className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
-                                isDragging
-                                    ? 'border-purple-500 bg-purple-500/10'
-                                    : 'border-gray-600 hover:border-purple-500/50'
-                            }`}
-                        >
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-center">
-                                    <label className="cursor-pointer">
-                                        <input
-                                            type="file"
-                                            accept="video/*"
-                                            onChange={handleFileInput}
-                                            className="hidden"
-                                        />
-                                        <div className="flex flex-col items-center gap-2">
-                                            <svg
-                                                className="w-12 h-12 text-gray-400"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth="2"
-                                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                                                />
-                                            </svg>
-                                            <span className="text-gray-300">
-                                                {fileName || 'Drop your video here or click to browse'}
-                                            </span>
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mt-6 space-y-4">
-                            <input
-                                type="text"
-                                placeholder="Describe how you want to enhance your video..."
-                                onChange={(e) => setPrompt(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg bg-gray-700/50 border border-gray-600 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
-                            />
-
-                            <button
-                                onClick={async () => {
-                                    const formData = new FormData();
-                                    formData.append('video', video);
-                                    formData.append('prompt', prompt);
-                                    
-                                    const response = await fetch('http://localhost:8000/process-video', {
-                                        method: 'POST',
-                                        body: formData,
-                                    });
-                                    
-                                    if (response.ok) {
-                                        const data = await response.json();
-                                        window.location.href = `/editor/${encodeURIComponent(data.result.video_id)}`;
-                                    }
-                                }}
-                                disabled={!video || !prompt}
-                                className="w-full py-3 px-6 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-                            >
-                                Enhance Video
-                            </button>
-                        </div>
-                    </motion.div>
-                </div>
-
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.4 }}
-                    className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 text-center"
-                >
-                    {[
-                        {
-                            title: 'AI-Powered',
-                            description: 'Advanced AI algorithms to enhance your videos',
-                            icon: '🤖'
-                        },
-                        {
-                            title: 'Fast Processing',
-                            description: 'Quick and efficient video enhancement',
-                            icon: '⚡'
-                        },
-                        {
-                            title: 'High Quality',
-                            description: 'Professional-grade output every time',
-                            icon: '✨'
-                        }
-                    ].map((feature, index) => (
-                        <div key={index} className="p-6 rounded-xl bg-gray-800/30 backdrop-blur-sm">
-                            <div className="text-4xl mb-4">{feature.icon}</div>
-                            <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                            <p className="text-gray-400">{feature.description}</p>
-                        </div>
-                    ))}
-                </motion.div>
-            </main>
+      <main className="relative overflow-x-hidden">
+        <div className="fixed inset-0 bg-[#080B13]">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0A1423]/90 via-[#0F1829]/80 to-[#080B13]/95 animated-gradient" />
+          <div className="absolute inset-0 grid-pattern opacity-20" />
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="moving-line"
+              style={{
+                animationDelay: `${i * 3}s`,
+                top: `${i * 30}%`,
+                opacity: '0.02'
+              }}
+            />
+          ))}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808005_1px,transparent_1px),linear-gradient(to_bottom,#80808005_1px,transparent_1px)] bg-[size:24px_24px]" />
         </div>
+
+        <div className="relative">
+          <Hero 
+            isDragging={isDragging}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onWatchDemo={() => setShowDemoVideo(true)}
+          />
+          <div className="mt-32">
+            <MarqueeStrip descriptions={descriptions} />
+            <div className="-mt-8"> {/* Additional negative margin */}
+              <Features />
+            </div>
+            <div className="-mt-8"> {/* Additional negative margin */}
+              <HowItWorks />
+            </div>
+            
+            {/* Ready to Transform section with reduced padding */}
+            <section className="py-16 relative overflow-hidden">
+              <div className="container mx-auto px-4">
+                <div className="max-w-4xl mx-auto text-center space-y-6">
+                  <h2 className="text-4xl md:text-5xl font-bold text-white">
+                    Ready to Transform Your Videos?
+                  </h2>
+                  <p className="text-xl text-blue-200/80">
+                    Join thousands of content creators who are already using our platform to create engaging videos
+                  </p>
+                  <div 
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className="inline-flex cursor-pointer items-center px-8 py-4 rounded-xl bg-gradient-to-r from-[#9b87f5] to-[#6E59A5] text-white font-semibold text-lg hover:opacity-90 transition-opacity"
+                  >
+                    Get Started Now
+                  </div>
+                </div>
+              </div>
+              
+              {/* Decorative elements */}
+              <div className="absolute -left-20 -bottom-20 w-40 h-40 bg-[#9b87f5] rounded-full opacity-20 blur-3xl" />
+              <div className="absolute -right-20 -top-20 w-40 h-40 bg-[#6E59A5] rounded-full opacity-20 blur-3xl" />
+            </section>
+          </div>
+        </div>
+
+        <Dialog open={showDemoVideo} onOpenChange={setShowDemoVideo}>
+          <DialogContent className="max-w-4xl bg-[#0A1929]/95 border-white/10">
+            <DialogHeader>
+              <DialogTitle className="text-xl text-white mb-4">
+                How it Works
+              </DialogTitle>
+            </DialogHeader>
+            <div className="aspect-video bg-black/50 rounded-lg overflow-hidden">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/xvFZjo5PgG0?autoplay=1"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      </main>
     );
-}
+};
+
+export default Index;

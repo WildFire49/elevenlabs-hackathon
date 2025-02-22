@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useParams } from 'next/navigation';
-import { HiOutlinePencilAlt, HiOutlineTrash, HiPlus, HiCheck, HiX } from 'react-icons/hi';
+import { useEffect, useState } from 'react';
+import { HiCheck, HiDownload, HiOutlineTrash, HiPlus } from 'react-icons/hi';
+import { toast } from 'sonner';
 
 const VideoEditor = () => {
   const { videoId } = useParams();
@@ -14,6 +16,8 @@ const VideoEditor = () => {
   const [bgPosition, setBgPosition] = useState({ x: 50, y: 50 });
   const [voiceModels, setVoiceModels] = useState([]);
   const [selectedVoiceId, setSelectedVoiceId] = useState("AZnzlk1XvdvUeBnXmlld");
+  const [showDownload, setShowDownload] = useState(false);
+  const [processedVideoUrl, setProcessedVideoUrl] = useState(null);
 
   useEffect(() => {
     fetchVideo();
@@ -80,6 +84,7 @@ const VideoEditor = () => {
   const handleSave = async () => {
     setIsLoading(true);
     setSaveStatus('Saving...');
+    setShowDownload(false);
     try {
       const response = await fetch(`http://localhost:8000/video/${decodeURIComponent(videoId).replace("files/", "")}/update`, {
         method: 'POST',
@@ -98,6 +103,8 @@ const VideoEditor = () => {
       
       setSaveStatus('success');
       setVideoKey(prev => prev + 1);
+      setProcessedVideoUrl(`http://localhost:8000/videos/${decodeURIComponent(videoId).replace("files/", "")}`);
+      setShowDownload(true);
       setTimeout(() => setSaveStatus(''), 2000);
     } catch (error) {
       console.error('Error saving:', error);
@@ -105,6 +112,26 @@ const VideoEditor = () => {
       setTimeout(() => setSaveStatus(''), 2000);
     }
     setIsLoading(false);
+  };
+
+  const handleDownload = async () => {
+    if (!processedVideoUrl) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/videos/${decodeURIComponent(videoId).replace("files/", "")}`);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${decodeURIComponent(videoId).replace("files/", "")}.mp4`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading video:', error);
+      toast.error('Failed to download video');
+    }
   };
 
   if (!video) return (
@@ -143,6 +170,13 @@ const VideoEditor = () => {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-light">Transcripts</h2>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="text-sm text-blue-300/70 italic absolute top-20"
+                >
+                  Tip: You can edit transcripts anytime and re-render the video
+                </motion.div>
                 <div className="flex items-center gap-4">
                   <select
                     className="bg-gray-800/50 backdrop-blur-lg text-white rounded-lg px-4 py-2.5 border border-white/10 hover:border-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer min-w-[200px]"
@@ -211,28 +245,42 @@ const VideoEditor = () => {
                 ))}
               </div>
 
-              <div className="sticky bottom-0 pt-4">
+              <div className="flex justify-end gap-4 mt-8">
+                <AnimatePresence>
+                  {showDownload && (
+                    <motion.button
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      onClick={handleDownload}
+                      className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 transition-all duration-300 text-blue-300"
+                    >
+                      <HiDownload className="w-5 h-5" />
+                      <span>Download Video</span>
+                    </motion.button>
+                  )}
+                </AnimatePresence>
                 <button
                   onClick={handleSave}
                   disabled={isLoading}
-                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all duration-300 ${
-                    saveStatus === 'success' ? 'bg-green-500' :
-                    saveStatus === 'error' ? 'bg-red-500' :
-                    saveStatus === 'saving' ? 'bg-white/20' :
-                    'bg-white/10 hover:bg-white/20'
-                  }`}
+                  className={`relative flex items-center gap-2 px-6 py-2.5 rounded-lg ${
+                    isLoading ? 'bg-white/10' : 'bg-blue-500 hover:bg-blue-600'
+                  } transition-all duration-300 disabled:cursor-not-allowed`}
                 >
-                  {saveStatus === 'success' ? (
-                    <><HiCheck className="w-5 h-5" /> Saved!</>
-                  ) : saveStatus === 'error' ? (
-                    <><HiX className="w-5 h-5" /> Error Saving</>
-                  ) : saveStatus === 'saving' ? (
+                  {isLoading ? (
                     <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="w-5 h-5 border-2 border-white/20 border-t-white/100 rounded-full"
+                      />
                       Saving...
                     </div>
                   ) : (
-                    'Save Changes'
+                    <>
+                      <HiCheck className="w-5 h-5" />
+                      Confirm & Proceed
+                    </>
                   )}
                 </button>
               </div>

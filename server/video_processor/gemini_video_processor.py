@@ -27,7 +27,7 @@ class GeminiVideoProcessor(VideoProcessor):
                 model="gemini-1.5-pro",
                 config=GenerateContentConfig(
                     system_instruction=self.system_prompt,
-                    temperature=0.5,
+                    temperature=0,
                     response_schema=genai.types.Schema(
                         type=genai.types.Type.OBJECT,
                         enum=[],
