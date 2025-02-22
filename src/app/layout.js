@@ -1,28 +1,45 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
+'use client';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+import { Inter, Poppins } from 'next/font/google';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import './globals.css';
+
+const inter = Inter({ subsets: ['latin'] });
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-poppins',
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#2196f3',
+    },
+    background: {
+      default: '#0a1929',
+      paper: '#132f4c',
+    },
+  },
+  typography: {
+    fontFamily: 'var(--font-poppins)',
+  },
 });
-
-export const metadata = {
-  title: "Awesome app",
-  description: "An Awesome app idea",
-};
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang="en" className={poppins.variable}>
+      <head>
+        <title>Video Editor</title>
+      </head>
+      <body className={inter.className}>
+        <ThemeProvider theme={darkTheme}>
+          <CssBaseline />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
