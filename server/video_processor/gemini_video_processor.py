@@ -62,10 +62,41 @@ class GeminiVideoProcessor(VideoProcessor):
                 contents=[video, prompt if prompt else "Generate a professional voiceover text for this video"],
             )
             logger.info(f"Generated subtitles for video {video_path}")
-            return ProcessedVideoResponse(video_id=video.name, subtitles=json.loads(response.text)['subtitles'])
+            
+            # Parse the response
+            subtitles = json.loads(response.text)['subtitles']
+            video_id = video.name.replace("files/", "")
+            logger.info(f"Processing video with ID: {video_id}")
+            logger.info(f"Subtitles to be stored: {subtitles}")
+            
+            # Store transcripts in database
+            with get_db_cursor() as cursor:
+                # First check if video exists
+                cursor.execute(
+                    "SELECT video_id FROM videos WHERE video_id = %s",
+                    (video_id,)
+                )
+                exists = cursor.fetchone()
+                logger.info(f"Video exists in database: {exists is not None}")
+                
+                if not exists:
+                    logger.info("Video not found in database, inserting new record")
+                    cursor.execute(
+                        "INSERT INTO videos (video_id, transcripts) VALUES (%s, %s)",
+                        (video_id, json.dumps(subtitles))
+                    )
+                else:
+                    logger.info("Video found in database, updating transcripts")
+                    cursor.execute(
+                        "UPDATE videos SET transcripts = %s WHERE video_id = %s",
+                        (json.dumps(subtitles), video_id)
+                    )
+                logger.info(f"Updated transcripts for video_id: {video_id}")
+            
+            return ProcessedVideoResponse(video_id=video.name, subtitles=subtitles)
         except Exception as e:
             logger.error(f"Error processing video {video_path}: {e}")
-            return ProcessedVideoResponse(subtitles=[])
+            raise e
 
     def __upload__video__(self, file_path) -> genai.types.File:
         logger.info(f"Uploading video {file_path}")
@@ -79,11 +110,14 @@ class GeminiVideoProcessor(VideoProcessor):
             raise Exception(f"Failed to upload video {file_path}")
         
         # Store video ID in database using the central connection
+        video_id = uploaded_file.name.replace("files/", "")
+        logger.info(f"Storing video_id in database: {video_id}")
         with get_db_cursor() as cursor:
             cursor.execute(
                 "INSERT INTO videos (video_id) VALUES (%s) ON CONFLICT (video_id) DO NOTHING",
-                (uploaded_file.name,)
+                (video_id,)
             )
+            logger.info(f"Stored video_id in database: {video_id}")
             
         logger.info(f"Uploaded video {file_path} as {uploaded_file.name}")
         return uploaded_file

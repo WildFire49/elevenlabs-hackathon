@@ -20,4 +20,5 @@ instance
 samples
 audio
 static/audio
+static/videos
 .pytest_cache
