@@ -19,3 +19,4 @@ instance
 .pytest_cache
 samples
 audio
+.pytest_cache
