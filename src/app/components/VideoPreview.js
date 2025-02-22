@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Typography, IconButton, Paper, Slider } from '@mui/material';
+import { Box, Typography, IconButton, Paper } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
@@ -9,9 +9,7 @@ import MovieIcon from '@mui/icons-material/Movie';
 import AudiotrackIcon from '@mui/icons-material/Audiotrack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
-import VolumeUpIcon from '@mui/icons-material/VolumeUp';
-import VolumeOffIcon from '@mui/icons-material/VolumeOff';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
 
@@ -85,82 +83,93 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
   transition: 'all 0.2s ease',
 }));
 
-const StyledSlider = styled(Slider)(({ theme }) => ({
-  color: '#2196f3',
-  '& .MuiSlider-thumb': {
-    width: 12,
-    height: 12,
-    backgroundColor: '#90caf9',
-    '&:hover, &.Mui-focusVisible': {
-      boxShadow: '0 0 0 8px rgba(144, 202, 249, 0.16)',
-    },
-  },
-  '& .MuiSlider-rail': {
-    backgroundColor: '#1e3a5f',
-  },
-}));
+export default function VideoPreview({ 
+  videoUrl, 
+  audioUrl,
+  playing,
+  onPlayPause,
+  onProgress,
+  playerRef,
+  onFileUpload,
+  currentTime,
+  videoMuted,
+  audioMuted,
+  videoVolume,
+  audioVolume 
+}) {
+  const audioRef = useRef(null);
+  const [isAudioReady, setIsAudioReady] = useState(false);
 
-const TimeDisplay = styled(Typography)(({ theme }) => ({
-  color: '#90caf9',
-  fontSize: '0.875rem',
-  minWidth: '60px',
-  fontFamily: 'var(--font-poppins)',
-}));
+  useEffect(() => {
+    if (!audioUrl) return;
 
-export default function VideoPreview({ videoUrl, onFileUpload }) {
-  const [playing, setPlaying] = useState(false);
-  const [muted, setMuted] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [seeking, setSeeking] = useState(false);
-  const playerRef = useRef(null);
-
-  const handlePlayPause = () => setPlaying(!playing);
-  const handleMute = () => setMuted(!muted);
-  
-  const handleProgress = (state) => {
-    if (!seeking) {
-      setProgress(state.played);
-    }
-  };
-
-  const handleDuration = (duration) => {
-    setDuration(duration);
-  };
-
-  const handleSeekMouseDown = () => {
-    setSeeking(true);
-  };
-
-  const handleSeekChange = (_, value) => {
-    setProgress(value);
-  };
-
-  const handleSeekMouseUp = (_, value) => {
-    setSeeking(false);
-    playerRef.current?.seekTo(value);
-  };
-
-  const formatTime = (seconds) => {
-    const pad = (num) => (`0${Math.floor(num)}`).slice(-2);
-    const minutes = seconds / 60;
-    const hours = minutes / 60;
+    const audio = new Audio(audioUrl);
+    audio.preload = 'auto';
     
-    if (hours >= 1) {
-      return `${pad(hours)}:${pad(minutes % 60)}:${pad(seconds % 60)}`;
+    audio.addEventListener('canplaythrough', () => {
+      setIsAudioReady(true);
+    });
+
+    audio.addEventListener('ended', () => {
+      onPlayPause?.(false);
+    });
+
+    audioRef.current = audio;
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('canplaythrough', () => setIsAudioReady(true));
+        audioRef.current.removeEventListener('ended', () => onPlayPause?.(false));
+        audioRef.current.pause();
+        audioRef.current.src = '';
+      }
+    };
+  }, [audioUrl, onPlayPause]);
+
+  // Handle play/pause and seeking
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !isFinite(currentTime) || currentTime < 0) return;
+
+    // Update time if needed
+    const timeDiff = Math.abs(audio.currentTime - currentTime);
+    if (timeDiff > 0.1) {
+      audio.currentTime = currentTime;
     }
-    return `${pad(minutes)}:${pad(seconds % 60)}`;
-  };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const files = Array.from(e.dataTransfer.files);
-    onFileUpload({ target: { files } });
-  };
+    // Handle play/pause
+    if (playing) {
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.error('Audio playback error:', error);
+          onPlayPause?.(false);
+        });
+      }
+    } else {
+      audio.pause();
+    }
+  }, [playing, currentTime, onPlayPause]);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
+  // Handle volume changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = audioMuted ? 0 : audioVolume;
+    }
+  }, [audioVolume, audioMuted]);
+
+  const handlePlayPause = useCallback(() => {
+    onPlayPause?.(!playing);
+  }, [playing, onPlayPause]);
+
+  const handleProgress = useCallback((state) => {
+    if (!state?.playedSeconds || !isFinite(state.playedSeconds)) return;
+    onProgress?.(state);
+  }, [onProgress]);
+
+  const handleVideoEnded = useCallback(() => {
+    onPlayPause?.(false);
+  }, [onPlayPause]);
 
   return (
     <PreviewContainer
@@ -192,43 +201,36 @@ export default function VideoPreview({ videoUrl, onFileUpload }) {
               width="100%"
               height="100%"
               playing={playing}
-              muted={muted}
+              muted={videoMuted}
+              volume={videoVolume}
               onProgress={handleProgress}
-              onDuration={handleDuration}
+              onEnded={handleVideoEnded}
+              onError={(error) => {
+                console.error('Video playback error:', error);
+                onPlayPause?.(false);
+              }}
             />
           </PlayerContainer>
           <Controls>
-            <StyledIconButton onClick={handlePlayPause} size="small">
+            <StyledIconButton 
+              onClick={handlePlayPause} 
+              size="small"
+              disabled={audioUrl && !isAudioReady}
+            >
               {playing ? <PauseIcon /> : <PlayArrowIcon />}
             </StyledIconButton>
-            <StyledIconButton onClick={handleMute} size="small">
-              {muted ? <VolumeOffIcon /> : <VolumeUpIcon />}
-            </StyledIconButton>
-            <Box sx={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-              <TimeDisplay>
-                {formatTime(progress * duration)}
-              </TimeDisplay>
-              <StyledSlider
-                value={progress}
-                onMouseDown={handleSeekMouseDown}
-                onChange={handleSeekChange}
-                onChangeCommitted={handleSeekMouseUp}
-                step={0.001}
-                min={0}
-                max={1}
-              />
-              <TimeDisplay>
-                {formatTime(duration)}
-              </TimeDisplay>
-            </Box>
           </Controls>
         </>
       ) : (
         <UploadZone
           component="label"
           elevation={0}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
+          onDrop={(e) => {
+            e.preventDefault();
+            const files = Array.from(e.dataTransfer.files);
+            onFileUpload({ target: { files } });
+          }}
+          onDragOver={(e) => e.preventDefault()}
         >
           <input
             type="file"
@@ -240,10 +242,10 @@ export default function VideoPreview({ videoUrl, onFileUpload }) {
           <CloudUploadIcon sx={{ fontSize: 48, color: '#2196f3' }} />
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="h6" sx={{ color: '#fff', fontWeight: 500, mb: 1, fontFamily: 'var(--font-poppins)' }}>
-              Drop your media here 🎥 🎵
+              Upload Media
             </Typography>
             <Typography variant="body2" sx={{ color: '#90caf9', fontFamily: 'var(--font-poppins)' }}>
-              Drag and drop your video or audio files, or click to browse
+              Drag and Drop your Video or audio files, or Click to Browse
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
