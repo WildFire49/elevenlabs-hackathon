@@ -41,6 +41,14 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 async def root():
     return FileResponse('static/index.html')
 
+@app.get("/tts-models")
+async def get_tts_models():
+    return {"models": [
+        {"name": "Alice", "id": "Xb7hH8MSUJpSbSDYk0k2"},
+        {"name": "Dori", "id": "AZnzlk1XvdvUeBnXmlld"},
+        {"name": "Hans", "id": "2IvXjXK6UQs4Y5eCkX4q"}
+    ]}
+
 @app.post("/process-video")
 async def process_video(
         video: UploadFile = File(...),
@@ -173,6 +181,7 @@ async def get_audio(audio_id: str):
 class TranscriptUpdate(BaseModel):
     video_id: str
     transcripts: List[Dict[str, str]]
+    voice_id: str = "AZnzlk1XvdvUeBnXmlld"  # Default voice ID
 
 @app.post("/video/{video_id}/update")
 async def update_video(video_id: str, update: TranscriptUpdate):
@@ -188,7 +197,7 @@ async def update_video(video_id: str, update: TranscriptUpdate):
         for transcript in update.transcripts:
             text = transcript['text']
             logger.debug(f"Processing text: {text}")
-            audio = elevenlabs_processor.process(text)
+            audio = elevenlabs_processor.process(text, voice_id=update.voice_id)
             subtitle_id = cuid.cuid()
             audio_filename = f"temp_audio_{subtitle_id}.mp3"
             audio_path = os.path.join("static/temp_audio/", audio_filename)

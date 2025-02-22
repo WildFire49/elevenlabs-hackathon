@@ -1,190 +1,264 @@
 'use client';
+
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { HiOutlinePencilAlt, HiOutlineTrash, HiPlus, HiCheck, HiX } from 'react-icons/hi';
 
-const timeStringToSeconds = (timeStr) => {
-  const [minutes, seconds] = timeStr.split(':').map(Number);
-  return minutes * 60 + seconds;
-};
+const VideoEditor = () => {
+  const { videoId } = useParams();
+  const [video, setVideo] = useState(null);
+  const [transcripts, setTranscripts] = useState([]);
+  const [videoKey, setVideoKey] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('');
+  const [bgPosition, setBgPosition] = useState({ x: 50, y: 50 });
+  const [voiceModels, setVoiceModels] = useState([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState("AZnzlk1XvdvUeBnXmlld");
 
-const secondsToTimeString = (seconds) => {
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-  return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`;
-};
+  useEffect(() => {
+    fetchVideo();
+    fetchVoiceModels();
 
-export default function VideoEditor() {
-  const params = useParams();
-  const videoId = params?.videoId;
-  const [videoData, setVideoData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [editingIndex, setEditingIndex] = useState(null);
-  const [updatedTranscripts, setUpdatedTranscripts] = useState([]);
-  const [saving, setSaving] = useState(false);
-  const [videoKey, setVideoKey] = useState(0); 
+    const handleMouseMove = (e) => {
+      // Reduce movement by dividing by a larger number (makes it more subtle)
+      const x = 45 + ((e.clientX / window.innerWidth) * 10);
+      const y = 45 + ((e.clientY / window.innerHeight) * 10);
+      setBgPosition({ x, y });
+    };
 
-  const fetchVideoData = async () => {
-    if (!videoId) return;
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
+  const fetchVideo = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/video/${encodeURIComponent(videoId)}/detail`);
-      if (!response.ok) throw new Error('Video not found');
+      const response = await fetch(`http://localhost:8000/video/${decodeURIComponent(videoId).replace("files/", "")}/detail`);
       const data = await response.json();
-      if (!data.success) throw new Error('Failed to load video data');
-      setVideoData(data);
-      setUpdatedTranscripts(data.transcripts || []);
+      if (data.success) {
+        setVideo({
+          title: 'Video Editor',
+          url: data.video_url
+        });
+        setTranscripts(data.transcripts || []);
+      }
     } catch (error) {
-      console.error('Failed to load video:', error);
-      setError(error.message);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching video:', error);
     }
   };
 
-  useEffect(() => {
-    fetchVideoData();
-  }, [videoId]);
-
-  const handleUpdateTranscript = (index, field, value) => {
-    const newTranscripts = [...updatedTranscripts];
-    if (field === 'start' || field === 'end') {
-      value = secondsToTimeString(value);
+  const fetchVoiceModels = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/tts-models');
+      const data = await response.json();
+      setVoiceModels(data.models);
+    } catch (error) {
+      console.error('Error fetching voice models:', error);
     }
-    newTranscripts[index] = { ...newTranscripts[index], [field]: value };
-    setUpdatedTranscripts(newTranscripts);
   };
 
   const handleAddTranscript = () => {
-    const lastTranscript = updatedTranscripts[updatedTranscripts.length - 1];
-    const newStartTime = lastTranscript ? lastTranscript.end : "00:00";
-    const newEndTime = secondsToTimeString(timeStringToSeconds(newStartTime) + 2);
-    setUpdatedTranscripts([...updatedTranscripts, {
-      start: newStartTime,
-      end: newEndTime,
-      text: 'New transcript'
-    }]);
+    setTranscripts([
+      { text: '', start: '00:00', end: '00:00' },
+      ...transcripts
+    ]);
+  };
+
+  const handleUpdateTranscript = (index, field, value) => {
+    const updatedTranscripts = [...transcripts];
+    updatedTranscripts[index] = {
+      ...updatedTranscripts[index],
+      [field]: value
+    };
+    setTranscripts(updatedTranscripts);
   };
 
   const handleDeleteTranscript = (index) => {
-    const newTranscripts = updatedTranscripts.filter((_, i) => i !== index);
-    setUpdatedTranscripts(newTranscripts);
+    const updatedTranscripts = transcripts.filter((_, i) => i !== index);
+    setTranscripts(updatedTranscripts);
   };
 
-  const handleSaveTranscripts = async () => {
-    setSaving(true);
+  const handleSave = async () => {
+    setIsLoading(true);
+    setSaveStatus('Saving...');
     try {
-      const response = await fetch(`http://localhost:8000/video/${encodeURIComponent(videoId)}/update`, {
+      const response = await fetch(`http://localhost:8000/video/${decodeURIComponent(videoId).replace("files/", "")}/update`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          video_id: videoId,
-          transcripts: updatedTranscripts
+          video_id: decodeURIComponent(videoId).replace("files/", ""),
+          transcripts: transcripts,
+          voice_id: selectedVoiceId
         }),
       });
       
-      if (!response.ok) throw new Error('Failed to update transcripts');
+      const data = await response.json();
+      if (!data.success) throw new Error('Failed to save');
       
-      // Refresh video data and force video reload
-      await fetchVideoData();
-      setVideoKey(prevKey => prevKey + 1); 
+      setSaveStatus('success');
+      setVideoKey(prev => prev + 1);
+      setTimeout(() => setSaveStatus(''), 2000);
     } catch (error) {
-      console.error('Failed to save transcripts:', error);
-      alert('Failed to save transcripts');
-    } finally {
-      setSaving(false);
+      console.error('Error saving:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(''), 2000);
     }
+    setIsLoading(false);
   };
 
-  if (loading) return <div className="h-screen flex items-center justify-center">Loading video...</div>;
-  if (error) return <div className="h-screen flex items-center justify-center text-red-500">Error: {error}</div>;
-  if (!videoData) return <div className="h-screen flex items-center justify-center">No video data found</div>;
-
-  const hasUnsavedChanges = JSON.stringify(videoData.transcripts) !== JSON.stringify(updatedTranscripts);
-
-  return (
-    <div className="editor-container h-screen flex bg-gray-100">
-      {/* Video Player Section */}
-      <div className="flex-1 p-4">
-        <div className="bg-white rounded-lg shadow-lg p-4">
-          <video
-            key={videoKey} 
-            src={videoData.video_url}
-            controls
-            className="w-full aspect-video rounded-lg"
-          />
-        </div>
-      </div>
-
-      {/* Transcripts Panel */}
-      <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto flex flex-col">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center sticky top-0 bg-white z-10">
-          <h2 className="text-lg font-semibold">Transcripts</h2>
-          <button
-            onClick={handleAddTranscript}
-            className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm"
-          >
-            Add Transcript
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {updatedTranscripts.map((transcript, index) => (
-            <div
-              key={index}
-              className="p-4 border-b border-gray-200 hover:bg-gray-50"
-            >
-              <div className="flex justify-between items-start mb-2">
-                <div className="flex gap-2">
-                  <input
-                    type="number"
-                    value={timeStringToSeconds(transcript.start)}
-                    onChange={(e) => handleUpdateTranscript(index, 'start', parseFloat(e.target.value))}
-                    className="w-20 px-2 py-1 border rounded"
-                    step="1"
-                  />
-                  <span className="px-2">to</span>
-                  <input
-                    type="number"
-                    value={timeStringToSeconds(transcript.end)}
-                    onChange={(e) => handleUpdateTranscript(index, 'end', parseFloat(e.target.value))}
-                    className="w-20 px-2 py-1 border rounded"
-                    step="1"
-                  />
-                </div>
-                <button
-                  onClick={() => handleDeleteTranscript(index)}
-                  className="text-red-500 hover:text-red-700"
-                >
-                  Delete
-                </button>
-              </div>
-              <div className="text-xs text-gray-500 mb-1">
-                {transcript.start} - {transcript.end}
-              </div>
-              <textarea
-                value={transcript.text}
-                onChange={(e) => handleUpdateTranscript(index, 'text', e.target.value)}
-                className="w-full px-2 py-1 border rounded resize-y min-h-[60px]"
-              />
-            </div>
-          ))}
-        </div>
-
-        {hasUnsavedChanges && (
-          <div className="p-4 border-t border-gray-200 sticky bottom-0 bg-white">
-            <button
-              onClick={handleSaveTranscripts}
-              disabled={saving}
-              className="w-full py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-400"
-            >
-              {saving ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        )}
-      </div>
+  if (!video) return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+      <div className="animate-pulse text-white text-xl font-light">Loading...</div>
     </div>
   );
-}
+
+  return (
+    <div 
+      className="min-h-screen relative overflow-hidden text-white p-8"
+      style={{
+        background: `radial-gradient(circle at ${bgPosition.x}% ${bgPosition.y}%, rgb(17, 24, 39), rgb(0, 0, 0))`,
+        transition: 'background 0.8s ease'
+      }}
+    >
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="backdrop-blur-xl bg-white/5 rounded-2xl p-8 shadow-2xl border border-white/10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Video Section */}
+            <div className="space-y-6">
+              <h1 className="text-3xl font-light tracking-tight">
+                {video.title || 'Untitled Video'}
+              </h1>
+              <div className="relative rounded-xl overflow-hidden shadow-2xl bg-black/40">
+                <video
+                  key={videoKey}
+                  className="w-full aspect-video"
+                  src={video.url}
+                  controls
+                />
+              </div>
+            </div>
+
+            {/* Transcripts Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-light">Transcripts</h2>
+                <div className="flex items-center gap-4">
+                  <select
+                    className="bg-gray-800/50 backdrop-blur-lg text-white rounded-lg px-4 py-2.5 border border-white/10 hover:border-white/20 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-white/20 appearance-none cursor-pointer min-w-[200px]"
+                    value={selectedVoiceId}
+                    onChange={(e) => setSelectedVoiceId(e.target.value)}
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                      backgroundSize: '16px',
+                      paddingRight: '40px'
+                    }}
+                  >
+                    {voiceModels.map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.name}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleAddTranscript}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-all duration-300"
+                  >
+                    <HiPlus className="w-4 h-4" />
+                    <span>Add Transcript</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4 max-h-[calc(100vh-24rem)] overflow-y-auto pr-4 custom-scrollbar">
+                {transcripts.map((transcript, index) => (
+                  <div
+                    key={index}
+                    className="group backdrop-blur-lg bg-white/5 rounded-xl p-4 hover:bg-white/10 transition-all duration-300 border border-white/5 hover:border-white/10"
+                  >
+                    <div className="flex gap-4 items-center">
+                      <input
+                        type="text"
+                        value={transcript.start}
+                        onChange={(e) => handleUpdateTranscript(index, 'start', e.target.value)}
+                        placeholder="00:00"
+                        className="w-20 bg-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-300"
+                      />
+                      <input
+                        type="text"
+                        value={transcript.end}
+                        onChange={(e) => handleUpdateTranscript(index, 'end', e.target.value)}
+                        placeholder="00:00"
+                        className="w-20 bg-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-300"
+                      />
+                      <button
+                        onClick={() => handleDeleteTranscript(index)}
+                        className="ml-auto p-2 hover:bg-red-500/20 rounded-lg transition-all duration-300"
+                        title="Delete transcript"
+                      >
+                        <HiOutlineTrash className="w-5 h-5 text-red-400/70" />
+                      </button>
+                    </div>
+                    <textarea
+                      value={transcript.text}
+                      onChange={(e) => handleUpdateTranscript(index, 'text', e.target.value)}
+                      placeholder="Enter transcript text..."
+                      className="mt-3 w-full bg-black/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-white/20 resize-none h-24 transition-all duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="sticky bottom-0 pt-4">
+                <button
+                  onClick={handleSave}
+                  disabled={isLoading}
+                  className={`w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium transition-all duration-300 ${
+                    saveStatus === 'success' ? 'bg-green-500' :
+                    saveStatus === 'error' ? 'bg-red-500' :
+                    saveStatus === 'saving' ? 'bg-white/20' :
+                    'bg-white/10 hover:bg-white/20'
+                  }`}
+                >
+                  {saveStatus === 'success' ? (
+                    <><HiCheck className="w-5 h-5" /> Saved!</>
+                  ) : saveStatus === 'error' ? (
+                    <><HiX className="w-5 h-5" /> Error Saving</>
+                  ) : saveStatus === 'saving' ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                      Saving...
+                    </div>
+                  ) : (
+                    'Save Changes'
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default VideoEditor;

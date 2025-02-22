@@ -12,10 +12,10 @@ class ElevenLabsTTSProcessor(TTSProcessor):
             api_key=os.environ.get("ELEVENLABS_API_KEY")
         )
 
-    def process(self, text: str) -> bytes:
+    def process(self, text: str, voice_id: str = "AZnzlk1XvdvUeBnXmlld") -> bytes:
         audio = self.client.text_to_speech.convert(
             text=text,
-            voice_id="AZnzlk1XvdvUeBnXmlld",
+            voice_id=voice_id,
             model_id="eleven_multilingual_v2",
             output_format="mp3_44100_192",
             voice_settings=VoiceSettings(
@@ -28,3 +28,7 @@ class ElevenLabsTTSProcessor(TTSProcessor):
         if isinstance(audio, typing.Iterator):
             return b''.join(audio)
         return audio
+
+    def get_models(self) -> typing.List[typing.Dict[str, str]]:
+        voices = self.client.voices.get_all()
+        return [{"name": voice.name, "id": voice.voice_id} for voice in voices]
