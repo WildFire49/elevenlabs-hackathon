@@ -1,7 +1,8 @@
 'use client';
 
-import { Box, Typography, TextField, Tab, Tabs, AppBar, Toolbar, IconButton, Divider, Slider } from '@mui/material';
+import { Box, Typography, TextField, Slider, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { motion } from 'framer-motion';
 import React, { useState, useEffect } from 'react';
 import AddIcon from '@mui/icons-material/Add';
 import TransformIcon from '@mui/icons-material/Transform';
@@ -18,37 +19,44 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import VolumeOffIcon from '@mui/icons-material/VolumeOff';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
-const SIDEBAR_WIDTH = 540;
-
-const SidebarContainer = styled(Box)(({ theme }) => ({
-  width: '400px',
+const SidebarContainer = styled(motion.div)(({ theme }) => ({
+  width: '320px',
   height: '100%',
-  backgroundColor: '#0a1929',
-  borderLeft: '1px solid #1e3a5f',
+  backgroundColor: 'rgba(10, 25, 41, 0.7)',
+  backdropFilter: 'blur(12px)',
+  borderLeft: '1px solid rgba(255, 255, 255, 0.1)',
   display: 'flex',
   flexDirection: 'column',
-}));
-
-const TabsContainer = styled(Box)(({ theme }) => ({
-  borderBottom: '1px solid #1e3a5f',
-}));
-
-const ContentContainer = styled(Box)(({ theme }) => ({
-  flex: 1,
-  overflow: 'auto',
+  gap: '24px',
+  padding: '24px',
+  overflowY: 'auto',
   '&::-webkit-scrollbar': {
-    width: '8px',
+    width: '6px',
   },
   '&::-webkit-scrollbar-track': {
-    background: '#0a1929',
+    background: 'transparent',
   },
   '&::-webkit-scrollbar-thumb': {
-    background: '#1e3a5f',
-    borderRadius: '4px',
+    background: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: '3px',
     '&:hover': {
-      background: '#234876',
+      background: 'rgba(255, 255, 255, 0.3)',
     },
   },
+}));
+
+const Section = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '28px',
+  fontWeight: 600,
+  color: '#fff',
+  letterSpacing: '-0.02em',
+  marginBottom: '8px',
 }));
 
 const SubtitlesContainer = styled(Box)(({ theme }) => ({
@@ -91,39 +99,16 @@ const VolumeSlider = styled(Slider)(({ theme }) => ({
   },
 }));
 
-const StyledTab = styled(Tab)(({ theme }) => ({
-  fontFamily: 'var(--font-poppins)',
-  color: '#64b5f6',
-  '&.Mui-selected': {
-    color: '#90caf9',
+const StyledTextField = styled(TextField)(({ theme }) => ({
+  marginTop: theme.spacing(1),
+  '& .MuiOutlinedInput-root': {
+    fontFamily: 'var(--font-poppins)',
+    color: '#fff',
+    backgroundColor: '#0a1929',
+    '& fieldset': { borderColor: '#1e3a5f' },
+    '&:hover fieldset': { borderColor: '#2196f3' },
+    '&.Mui-focused fieldset': { borderColor: '#64b5f6' },
   },
-  '&:hover': {
-    color: '#bbdefb',
-    backgroundColor: 'rgba(144, 202, 249, 0.08)',
-  },
-  transition: 'all 0.3s ease',
-}));
-
-const ToolbarButton = styled(IconButton)(({ theme }) => ({
-  color: '#90caf9',
-  '&:hover': {
-    backgroundColor: 'rgba(144, 202, 249, 0.08)',
-    transform: 'scale(1.1)',
-  },
-  transition: 'all 0.2s ease',
-}));
-
-const StyledListItem = styled('div')(({ theme }) => ({
-  padding: '12px 16px',
-  marginBottom: '4px',
-  borderRadius: '8px',
-  cursor: 'pointer',
-  color: '#64b5f6',
-  '&:hover': {
-    backgroundColor: 'rgba(144, 202, 249, 0.08)',
-    transform: 'translateX(8px)',
-  },
-  transition: 'all 0.3s ease',
 }));
 
 const StyledIconButton = styled(IconButton)(({ theme }) => ({
@@ -213,18 +198,6 @@ const ButtonText = styled(Typography)(({ theme }) => ({
   fontFamily: 'var(--font-poppins)',
 }));
 
-const StyledTextField = styled(TextField)(({ theme }) => ({
-  marginTop: theme.spacing(1),
-  '& .MuiOutlinedInput-root': {
-    fontFamily: 'var(--font-poppins)',
-    color: '#fff',
-    backgroundColor: '#0a1929',
-    '& fieldset': { borderColor: '#1e3a5f' },
-    '&:hover fieldset': { borderColor: '#2196f3' },
-    '&.Mui-focused fieldset': { borderColor: '#64b5f6' },
-  },
-}));
-
 const toolbarItems = [
   { icon: <TransformIcon sx={{ fontSize: 20 }} />, text: 'Transform' },
   { icon: <AudiotrackIcon sx={{ fontSize: 20 }} />, text: 'Audio' },
@@ -239,15 +212,13 @@ const tabIcons = {
   2: <SummarizeIcon />,
 };
 
-export default function Sidebar({
-  activeTab,
-  onTabChange,
+const Sidebar = ({
   prompt,
   onPromptChange,
   subtitles,
   onSubtitlesChange,
   onFileUpload,
-  currentTime = 0,
+  currentTime,
   videoMuted,
   onVideoMute,
   videoVolume,
@@ -256,7 +227,7 @@ export default function Sidebar({
   onAudioMute,
   audioVolume,
   onAudioVolumeChange,
-}) {
+}) => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editValues, setEditValues] = useState({
     start: '',
@@ -381,193 +352,130 @@ export default function Sidebar({
   };
 
   return (
-    <SidebarContainer>
-      <AppBar position="static" sx={{ backgroundColor: '#0a1929', boxShadow: 'none', borderBottom: '1px solid #1e3a5f' }}>
-        <Toolbar variant="dense">
-          <Typography 
-            variant="subtitle1" 
-            sx={{ 
-              flexGrow: 1, 
-              color: '#90caf9',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 1,
-              fontFamily: 'var(--font-poppins)',
-              fontWeight: 700,
-            }}
-          >
-            <TuneIcon sx={{ fontSize: 20 }} />
-            Bhadvenger Tools
-          </Typography>
-          <ToolbarButton size="small" component="label">
-            <input 
-              type="file" 
-              hidden 
-              accept="video/*,audio/*" 
-              onChange={onFileUpload}
-              multiple
-            />
-            <AddIcon />
-          </ToolbarButton>
-        </Toolbar>
-      </AppBar>
+    <SidebarContainer
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 20 }}
+      transition={{ duration: 0.3 }}
+    >
+      <Section>
+        <SectionTitle>Voice Clone</SectionTitle>
+        {/* Voice cloning content */}
+      </Section>
 
-      <TabsContainer>
-        <Tabs 
-          value={activeTab} 
-          onChange={onTabChange}
-          variant="fullWidth"
-          sx={{
-            minHeight: '48px',
-            '& .MuiTab-root': {
-              color: '#64b5f6',
-              minHeight: '48px',
-              '&.Mui-selected': {
-                color: '#90caf9',
-              },
-            },
-            '& .MuiTabs-indicator': {
-              backgroundColor: '#2196f3',
-            },
-          }}
-        >
-          <Tab label="Audio" />
-          <Tab label="Subtitles" />
-          <Tab label="Transform" />
-        </Tabs>
-      </TabsContainer>
-      
-      <ContentContainer>
-        {activeTab === 0 && (
-          <AudioControlsContainer>
-            <VolumeControl>
-              <IconButton 
-                size="small" 
-                onClick={onVideoMute}
-                sx={{ color: videoMuted ? '#64b5f6' : '#90caf9' }}
-              >
-                {videoMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
-              </IconButton>
-              <Typography sx={{ color: '#90caf9', minWidth: '80px' }}>
-                Video Volume
-              </Typography>
-              <VolumeSlider
-                value={videoVolume}
-                onChange={onVideoVolumeChange}
-                min={0}
-                max={1}
-                step={0.1}
-                disabled={videoMuted}
-              />
-            </VolumeControl>
-
-            <VolumeControl>
-              <IconButton 
-                size="small"
-                onClick={onAudioMute}
-                sx={{ color: audioMuted ? '#64b5f6' : '#90caf9' }}
-              >
-                {audioMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
-              </IconButton>
-              <Typography sx={{ color: '#90caf9', minWidth: '80px' }}>
-                Audio Volume
-              </Typography>
-              <VolumeSlider
-                value={audioVolume}
-                onChange={onAudioVolumeChange}
-                min={0}
-                max={1}
-                step={0.1}
-                disabled={audioMuted}
-              />
-            </VolumeControl>
-          </AudioControlsContainer>
-        )}
-        
-        {activeTab === 1 && (
-          <SubtitlesContainer>
-            {subtitlesList.result.subtitles.map((subtitle, index) => (
-              <MessageBubble 
-                key={index} 
-                isEditing={editingIndex === index}
-                isActive={isSubtitleActive(subtitle)}
-              >
-                {editingIndex === index ? (
-                  <>
-                    <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
-                      <StyledTextField
-                        label="Start Time"
-                        value={editValues.start}
-                        onChange={(e) => handleTimeChange(e, 'start')}
-                        placeholder="MM:SS"
-                        size="small"
-                        sx={{ width: '100px' }}
-                      />
-                      <StyledTextField
-                        label="End Time"
-                        value={editValues.end}
-                        onChange={(e) => handleTimeChange(e, 'end')}
-                        placeholder="MM:SS"
-                        size="small"
-                        sx={{ width: '100px' }}
-                      />
-                    </Box>
+      <Section>
+        <SectionTitle>Subtitles</SectionTitle>
+        <SubtitlesContainer>
+          {subtitlesList.result.subtitles.map((subtitle, index) => (
+            <MessageBubble 
+              key={index} 
+              isEditing={editingIndex === index}
+              isActive={isSubtitleActive(subtitle)}
+            >
+              {editingIndex === index ? (
+                <>
+                  <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
                     <StyledTextField
-                      fullWidth
-                      multiline
-                      value={editValues.text}
-                      onChange={(e) => handleTimeChange(e, 'text')}
-                      variant="outlined"
+                      label="Start Time"
+                      value={editValues.start}
+                      onChange={(e) => handleTimeChange(e, 'start')}
+                      placeholder="MM:SS"
                       size="small"
-                      autoFocus
+                      sx={{ width: '100px' }}
                     />
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, gap: 1 }}>
-                      <StyledIconButton size="small" onClick={() => handleSave(index)}>
-                        <SaveIcon fontSize="small" />
-                      </StyledIconButton>
-                    </Box>
-                  </>
-                ) : (
-                  <>
-                    <TimeStamp>
-                      {subtitle.start} - {subtitle.end}
-                    </TimeStamp>
-                    <SubtitleText>{subtitle.text}</SubtitleText>
-                    <ActionButtons className="actions">
-                      <StyledIconButton size="small" onClick={() => handleEdit(index)}>
-                        <EditIcon fontSize="small" />
-                      </StyledIconButton>
-                      <StyledIconButton size="small" onClick={() => handleDelete(index)}>
-                        <DeleteIcon fontSize="small" />
-                      </StyledIconButton>
-                    </ActionButtons>
-                  </>
-                )}
-              </MessageBubble>
-            ))}
-          </SubtitlesContainer>
-        )}
-        
-        {activeTab === 2 && (
-          <Box p={2}>
-            <Typography variant="h6" sx={{ color: '#90caf9', mb: 2, fontFamily: 'var(--font-poppins)', fontWeight: 500 }}>
-              Video Summary
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#64b5f6', mb: 2, fontFamily: 'var(--font-poppins)' }}>
-              AI-powered summary of your video content
-            </Typography>
-            <StyledTextField
-              fullWidth
-              multiline
-              rows={10}
-              placeholder="The video summary will appear here..."
-              variant="outlined"
-            />
-          </Box>
-        )}
-      </ContentContainer>
+                    <StyledTextField
+                      label="End Time"
+                      value={editValues.end}
+                      onChange={(e) => handleTimeChange(e, 'end')}
+                      placeholder="MM:SS"
+                      size="small"
+                      sx={{ width: '100px' }}
+                    />
+                  </Box>
+                  <StyledTextField
+                    fullWidth
+                    multiline
+                    value={editValues.text}
+                    onChange={(e) => handleTimeChange(e, 'text')}
+                    variant="outlined"
+                    size="small"
+                    autoFocus
+                  />
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1, gap: 1 }}>
+                    <StyledIconButton size="small" onClick={() => handleSave(index)}>
+                      <SaveIcon fontSize="small" />
+                    </StyledIconButton>
+                  </Box>
+                </>
+              ) : (
+                <>
+                  <TimeStamp>
+                    {subtitle.start} - {subtitle.end}
+                  </TimeStamp>
+                  <SubtitleText>{subtitle.text}</SubtitleText>
+                  <ActionButtons className="actions">
+                    <StyledIconButton size="small" onClick={() => handleEdit(index)}>
+                      <EditIcon fontSize="small" />
+                    </StyledIconButton>
+                    <StyledIconButton size="small" onClick={() => handleDelete(index)}>
+                      <DeleteIcon fontSize="small" />
+                    </StyledIconButton>
+                  </ActionButtons>
+                </>
+              )}
+            </MessageBubble>
+          ))}
+        </SubtitlesContainer>
+      </Section>
 
-      <Divider sx={{ borderColor: '#1e3a5f', my: 2 }} />
+      <Section>
+        <SectionTitle>Audio Settings</SectionTitle>
+        <AudioControlsContainer>
+          <VolumeControl>
+            <IconButton 
+              size="small" 
+              onClick={onVideoMute}
+              sx={{ color: videoMuted ? '#64b5f6' : '#90caf9' }}
+            >
+              {videoMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+            </IconButton>
+            <Typography sx={{ color: '#90caf9', minWidth: '80px' }}>
+              Video Volume
+            </Typography>
+            <VolumeSlider
+              value={videoVolume}
+              onChange={onVideoVolumeChange}
+              min={0}
+              max={1}
+              step={0.1}
+              disabled={videoMuted}
+            />
+          </VolumeControl>
+
+          <VolumeControl>
+            <IconButton 
+              size="small"
+              onClick={onAudioMute}
+              sx={{ color: audioMuted ? '#64b5f6' : '#90caf9' }}
+            >
+              {audioMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+            </IconButton>
+            <Typography sx={{ color: '#90caf9', minWidth: '80px' }}>
+              Audio Volume
+            </Typography>
+            <VolumeSlider
+              value={audioVolume}
+              onChange={onAudioVolumeChange}
+              min={0}
+              max={1}
+              step={0.1}
+              disabled={audioMuted}
+            />
+          </VolumeControl>
+        </AudioControlsContainer>
+      </Section>
     </SidebarContainer>
   );
-}
+};
+
+export default Sidebar;

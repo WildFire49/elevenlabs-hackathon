@@ -2,139 +2,145 @@
 
 import { Box, Typography, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import MovieIcon from '@mui/icons-material/Movie';
-import AudiotrackIcon from '@mui/icons-material/Audiotrack';
-import SubtitlesIcon from '@mui/icons-material/Subtitles';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
+import SpeedIcon from '@mui/icons-material/Speed';
 
-const Container = styled(motion.div)(({ theme }) => ({
-  flex: 1,
+const Container = styled(motion.div)({
+  width: '100%',
+  minHeight: '100vh',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  justifyContent: 'center',
-  gap: '32px',
-  padding: '48px',
-  position: 'relative',
-  overflow: 'hidden',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: '0',
-    left: '0',
-    right: '0',
-    bottom: '0',
-    background: 'radial-gradient(circle at top right, #1a365d40, transparent)',
-    pointerEvents: 'none',
+  gap: '48px',
+  padding: '48px 24px',
+  color: '#fff',
+  overflowY: 'auto',
+  '&::-webkit-scrollbar': {
+    width: '6px',
   },
-}));
+  '&::-webkit-scrollbar-track': {
+    background: 'transparent',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: 'rgba(255, 255, 255, 0.2)',
+    borderRadius: '3px',
+    '&:hover': {
+      background: 'rgba(255, 255, 255, 0.3)',
+    },
+  },
+});
 
-const UploadZone = styled(motion.div)(({ theme }) => ({
+const UploadZone = styled(motion.div)({
   width: '100%',
   maxWidth: '800px',
   aspectRatio: '16/9',
-  backgroundColor: '#0a1929',
-  border: '2px dashed #1e3a5f',
-  borderRadius: '16px',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
   gap: '24px',
+  padding: '48px',
+  borderRadius: '24px',
+  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  backdropFilter: 'blur(40px)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
   cursor: 'pointer',
-  padding: '32px',
-  position: 'relative',
-  transition: 'all 0.3s ease-in-out',
+  transition: 'all 0.3s ease',
   '&:hover': {
-    backgroundColor: '#0d2137',
-    borderColor: '#2196f3',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     transform: 'scale(1.02)',
-    '& .upload-icon': {
-      transform: 'scale(1.1)',
-      color: '#2196f3',
-    },
   },
-}));
+});
 
-const FeatureGrid = styled(Box)(({ theme }) => ({
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
+const Feature = styled(motion.div)({
+  display: 'flex',
+  alignItems: 'center',
   gap: '24px',
+  padding: '32px',
+  borderRadius: '24px',
+  backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  backdropFilter: 'blur(40px)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
   width: '100%',
   maxWidth: '800px',
-}));
+});
 
-const FeatureCard = styled(motion.div)(({ theme }) => ({
-  backgroundColor: '#132f4c',
-  borderRadius: '12px',
-  padding: '24px',
+const FeatureIcon = styled(Box)({
+  width: '64px',
+  height: '64px',
+  borderRadius: '16px',
   display: 'flex',
-  flexDirection: 'column',
   alignItems: 'center',
-  gap: '16px',
-  textAlign: 'center',
-  border: '1px solid #1e3a5f',
-  transition: 'all 0.3s ease-in-out',
-  '&:hover': {
-    backgroundColor: '#1a365d',
-    transform: 'translateY(-4px)',
-    '& .feature-icon': {
-      color: '#2196f3',
-    },
+  justifyContent: 'center',
+  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  '& svg': {
+    fontSize: '32px',
+    color: '#fff',
   },
-}));
+});
 
 const features = [
   {
-    icon: <MovieIcon sx={{ fontSize: 32 }} />,
-    title: 'Video Upload',
-    description: 'Upload your video files with ease. Supports multiple formats.',
+    icon: <AutoAwesomeIcon />,
+    title: 'AI-Powered Video Enhancement',
+    description: 'Transform your videos with cutting-edge AI technology. Enhance quality, remove noise, and optimize for any platform.',
   },
   {
-    icon: <AudiotrackIcon sx={{ fontSize: 32 }} />,
-    title: 'Audio Processing',
-    description: 'Advanced audio processing with background music support.',
+    icon: <RecordVoiceOverIcon />,
+    title: 'Voice Cloning & Dubbing',
+    description: 'Clone voices and create natural-sounding dubs in multiple languages using advanced voice synthesis.',
   },
   {
-    icon: <SubtitlesIcon sx={{ fontSize: 32 }} />,
-    title: 'Smart Subtitles',
-    description: 'Automatically generate and edit subtitles for your videos.',
+    icon: <SpeedIcon />,
+    title: 'Real-Time Processing',
+    description: 'Experience lightning-fast video processing with our optimized cloud infrastructure.',
   },
 ];
 
-export default function UploadState({ onUpload, onDrop, onDragOver, fileInputRef }) {
+const UploadState = ({ onUpload, onDrop, onDragOver, fileInputRef }) => {
   return (
     <Container
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <Typography 
-        variant="h3" 
-        sx={{ 
-          color: '#90caf9',
-          fontWeight: 600,
-          textAlign: 'center',
-          fontFamily: 'var(--font-poppins)',
-          mb: 2,
-        }}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.5 }}
       >
-        Video Editor
-      </Typography>
-      
-      <Typography 
-        variant="h6" 
-        sx={{ 
-          color: '#64b5f6',
-          textAlign: 'center',
-          maxWidth: '600px',
-          mb: 4,
-          opacity: 0.8,
-        }}
-      >
-        Transform your videos with powerful editing tools and AI-powered features
-      </Typography>
+        <Typography
+          variant="h1"
+          sx={{
+            fontSize: { xs: '36px', md: '48px' },
+            fontWeight: 700,
+            textAlign: 'center',
+            marginBottom: '16px',
+            background: 'linear-gradient(to right, #fff, #a5b4fc)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}
+        >
+          Transform Your Videos with AI
+        </Typography>
+        <Typography
+          variant="h2"
+          sx={{
+            fontSize: { xs: '18px', md: '24px' },
+            fontWeight: 400,
+            textAlign: 'center',
+            color: 'rgba(255, 255, 255, 0.7)',
+            maxWidth: '600px',
+            margin: '0 auto',
+          }}
+        >
+          Enhance, clone voices, and create stunning videos with our advanced AI tools
+        </Typography>
+      </motion.div>
 
       <UploadZone
         onDrop={onDrop}
@@ -144,79 +150,56 @@ export default function UploadState({ onUpload, onDrop, onDragOver, fileInputRef
         whileTap={{ scale: 0.98 }}
       >
         <input
-          type="file"
           ref={fileInputRef}
+          type="file"
           onChange={onUpload}
           accept="video/*"
           style={{ display: 'none' }}
         />
-        <CloudUploadIcon 
-          className="upload-icon"
-          sx={{ 
-            fontSize: 64,
-            color: '#90caf9',
-            transition: 'all 0.3s ease-in-out',
-          }} 
-        />
-        <Box sx={{ textAlign: 'center' }}>
-          <Typography 
-            variant="h5" 
-            sx={{ 
-              color: '#90caf9',
-              mb: 1,
-              fontWeight: 500,
-            }}
-          >
-            Drop your video here
-          </Typography>
-          <Typography 
-            sx={{ 
-              color: '#64b5f6',
-              opacity: 0.8,
-            }}
-          >
-            or click to browse
-          </Typography>
-        </Box>
+        <IconButton
+          sx={{
+            width: '96px',
+            height: '96px',
+            backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(40px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.15)',
+            },
+          }}
+        >
+          <CloudUploadIcon sx={{ fontSize: '48px', color: '#fff' }} />
+        </IconButton>
+        <Typography variant="h6" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+          Drag & drop your video or click to browse
+        </Typography>
       </UploadZone>
 
-      <FeatureGrid>
+      <Box sx={{ width: '100%', maxWidth: '800px' }}>
         {features.map((feature, index) => (
-          <FeatureCard
+          <motion.div
             key={index}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 + index * 0.1, duration: 0.5 }}
+            style={{ marginBottom: '24px' }}
           >
-            <Box 
-              className="feature-icon"
-              sx={{ 
-                color: '#90caf9',
-                transition: 'all 0.3s ease-in-out',
-              }}
-            >
-              {feature.icon}
-            </Box>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                color: '#90caf9',
-                fontWeight: 500,
-              }}
-            >
-              {feature.title}
-            </Typography>
-            <Typography 
-              sx={{ 
-                color: '#64b5f6',
-                opacity: 0.8,
-              }}
-            >
-              {feature.description}
-            </Typography>
-          </FeatureCard>
+            <Feature>
+              <FeatureIcon>{feature.icon}</FeatureIcon>
+              <Box>
+                <Typography variant="h6" sx={{ marginBottom: '8px' }}>
+                  {feature.title}
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                  {feature.description}
+                </Typography>
+              </Box>
+            </Feature>
+          </motion.div>
         ))}
-      </FeatureGrid>
+      </Box>
     </Container>
   );
-}
+};
+
+export default UploadState;

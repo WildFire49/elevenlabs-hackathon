@@ -6,15 +6,20 @@ import VideoPreview from './components/VideoPreview';
 import VideoTimeline from './components/VideoTimeline';
 import Sidebar from './components/Sidebar';
 import UploadState from './components/UploadState';
+import LoadingState from './components/LoadingState';
+import Background from './components/Background';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const EditorContainer = styled(Box)(({ theme }) => ({
+  position: 'relative',
   display: 'flex',
   height: '100vh',
-  backgroundColor: '#0a1929',
+  backgroundColor: 'transparent',
   overflow: 'hidden',
+  isolation: 'isolate',
 }));
 
-const MainContent = styled(Box)(({ theme }) => ({
+const MainContent = styled(motion.div)(({ theme }) => ({
   flex: 1,
   display: 'flex',
   flexDirection: 'column',
@@ -23,43 +28,27 @@ const MainContent = styled(Box)(({ theme }) => ({
   height: '100%',
   overflow: 'hidden',
   position: 'relative',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'radial-gradient(circle at top right, #1a365d40, transparent)',
-    pointerEvents: 'none',
-    zIndex: 0,
-  },
+  backdropFilter: 'blur(8px)',
+  backgroundColor: 'rgba(19, 47, 76, 0.4)',
+  borderRight: '1px solid rgba(255, 255, 255, 0.1)',
   '& > *': {
     position: 'relative',
     zIndex: 1,
   },
 }));
 
-const TimelineContainer = styled(Box)(({ theme }) => ({
+const TimelineContainer = styled(motion.div)(({ theme }) => ({
   flex: 1,
-  minHeight: 0, // Important for flex child scrolling
   display: 'flex',
   flexDirection: 'column',
-  overflow: 'auto', // Enable scrolling
-  '&::-webkit-scrollbar': {
-    width: '8px',
-    height: '8px',
-  },
-  '&::-webkit-scrollbar-track': {
-    background: '#0a1929',
-  },
-  '&::-webkit-scrollbar-thumb': {
-    background: '#1e3a5f',
-    borderRadius: '4px',
-    '&:hover': {
-      background: '#234876',
-    },
-  },
+  gap: '12px',
+  position: 'relative',
+  padding: '16px',
+  borderRadius: '12px',
+  backgroundColor: 'rgba(10, 25, 41, 0.7)',
+  backdropFilter: 'blur(12px)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)',
 }));
 
 export default function VideoEditor() {
@@ -86,6 +75,7 @@ export default function VideoEditor() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
   const playerRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -112,48 +102,24 @@ export default function VideoEditor() {
     }
   }, [videoUrl]);
 
-  const handleFileUpload = (event) => {
-    const files = Array.from(event.target.files);
-    
-    // Sort files by type - videos first, then audio
-    const sortedFiles = files.sort((a, b) => {
-      const isVideoA = a.type.startsWith('video/');
-      const isVideoB = b.type.startsWith('video/');
-      if (isVideoA && !isVideoB) return -1;
-      if (!isVideoA && isVideoB) return 1;
-      return 0;
-    });
+  const handleFileUpload = useCallback((event) => {
+    const file = event.target.files?.[0] || event.dataTransfer?.files?.[0];
+    if (file) {
+      setIsLoading(true);
+      const url = URL.createObjectURL(file);
+      setVideoUrl(url);
+      setTrimStart(0);
+    }
+  }, []);
 
-    // Process files in order
-    sortedFiles.forEach(file => {
-      if (file.type.startsWith('video/')) {
-        const url = URL.createObjectURL(file);
-        setVideoUrl(url);
-        setTrimStart(0);
-      } else if (file.type.startsWith('audio/')) {
-        const url = URL.createObjectURL(file);
-        const audio = new Audio(url);
-        audio.addEventListener('loadedmetadata', () => {
-          setAudioDuration(audio.duration);
-        });
-        setAudioUrl(url);
-        setAudioFileName(file.name);
-        setAudioOffset(0); // Reset audio offset when new audio is uploaded
-      }
-    });
-  };
+  const handleDrop = useCallback((event) => {
+    event.preventDefault();
+    handleFileUpload(event);
+  }, [handleFileUpload]);
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-  };
-
-  const handlePromptChange = (event) => {
-    setPrompt(event.target.value);
-  };
-
-  const handleSubtitlesChange = (newSubtitles) => {
-    setSubtitles(newSubtitles);
-  };
+  const handleDragOver = useCallback((event) => {
+    event.preventDefault();
+  }, []);
 
   const handlePlayPause = useCallback((newPlaying) => {
     setPlaying(newPlaying);
@@ -183,9 +149,16 @@ export default function VideoEditor() {
     }
   }, [videoDuration, trimStart, trimEnd]);
 
-  const handleTrimChange = useCallback((start, end) => {
-    setTrimStart(start);
-    setTrimEnd(end);
+  const handleTabChange = useCallback((event, newValue) => {
+    setActiveTab(newValue);
+  }, []);
+
+  const handlePromptChange = useCallback((event) => {
+    setPrompt(event.target.value);
+  }, []);
+
+  const handleSubtitlesChange = useCallback((newSubtitles) => {
+    setSubtitles(newSubtitles);
   }, []);
 
   const handleVideoMute = useCallback(() => {
@@ -208,89 +181,110 @@ export default function VideoEditor() {
     setPlaybackSpeed(value);
   }, []);
 
-  const handleDrop = useCallback((event) => {
-    event.preventDefault();
-    handleFileUpload(event);
-  }, []);
-
-  const handleDragOver = useCallback((event) => {
-    event.preventDefault();
+  const handleTrimChange = useCallback((start, end) => {
+    setTrimStart(start);
+    setTrimEnd(end);
   }, []);
 
   return (
-    <EditorContainer>
-      <MainContent>
-        {!videoUrl ? (
-          <UploadState
-            onUpload={handleFileUpload}
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-            fileInputRef={fileInputRef}
-          />
-        ) : (
-          <>
-            <VideoPreview
-              videoUrl={videoUrl}
-              audioUrl={audioUrl}
-              playing={playing}
-              onPlayPause={handlePlayPause}
-              onProgress={handleVideoProgress}
-              playerRef={playerRef}
+    <>
+      <Background />
+      <EditorContainer>
+        <AnimatePresence mode="wait">
+          <MainContent
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {!videoUrl ? (
+              <UploadState
+                onUpload={handleFileUpload}
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+                fileInputRef={fileInputRef}
+              />
+            ) : isLoading ? (
+              <LoadingState onLoadingComplete={() => setIsLoading(false)} />
+            ) : (
+              <>
+                <VideoPreview
+                  videoUrl={videoUrl}
+                  audioUrl={audioUrl}
+                  playing={playing}
+                  onPlayPause={handlePlayPause}
+                  onProgress={handleVideoProgress}
+                  playerRef={playerRef}
+                  onFileUpload={handleFileUpload}
+                  currentTime={timelinePosition}
+                  videoMuted={videoMuted}
+                  audioMuted={audioMuted}
+                  videoVolume={videoVolume}
+                  audioVolume={audioVolume}
+                />
+                <TimelineContainer
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.3 }}
+                >
+                  <VideoTimeline
+                    videoUrl={videoUrl}
+                    audioUrl={audioUrl}
+                    currentTime={timelinePosition}
+                    videoDuration={videoDuration}
+                    audioDuration={audioDuration}
+                    onSeek={handleTimelineSeek}
+                    onDurationChange={setVideoDuration}
+                    onAudioOffsetChange={setAudioOffset}
+                    videoMuted={videoMuted}
+                    audioMuted={audioMuted}
+                    videoVolume={videoVolume}
+                    audioVolume={audioVolume}
+                    onVideoMute={handleVideoMute}
+                    onAudioMute={handleAudioMute}
+                    onVideoVolumeChange={handleVideoVolumeChange}
+                    onAudioVolumeChange={handleAudioVolumeChange}
+                    playbackSpeed={playbackSpeed}
+                    onSpeedChange={handleSpeedChange}
+                    trimStart={trimStart}
+                    trimEnd={trimEnd}
+                    onTrimChange={handleTrimChange}
+                    playing={playing}
+                    subtitles={subtitles.result.subtitles}
+                  />
+                </TimelineContainer>
+              </>
+            )}
+          </MainContent>
+        </AnimatePresence>
+        {!isLoading && videoUrl && (
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <Sidebar
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              prompt={prompt}
+              onPromptChange={handlePromptChange}
+              subtitles={subtitles}
+              onSubtitlesChange={handleSubtitlesChange}
               onFileUpload={handleFileUpload}
               currentTime={timelinePosition}
               videoMuted={videoMuted}
-              audioMuted={audioMuted}
+              onVideoMute={handleVideoMute}
               videoVolume={videoVolume}
+              onVideoVolumeChange={handleVideoVolumeChange}
+              audioMuted={audioMuted}
+              onAudioMute={handleAudioMute}
               audioVolume={audioVolume}
+              onAudioVolumeChange={handleAudioVolumeChange}
             />
-            <TimelineContainer>
-              <VideoTimeline
-                videoUrl={videoUrl}
-                audioUrl={audioUrl}
-                currentTime={timelinePosition}
-                videoDuration={videoDuration}
-                audioDuration={audioDuration}
-                onSeek={handleTimelineSeek}
-                onDurationChange={setVideoDuration}
-                onAudioOffsetChange={setAudioOffset}
-                videoMuted={videoMuted}
-                audioMuted={audioMuted}
-                videoVolume={videoVolume}
-                audioVolume={audioVolume}
-                onVideoMute={handleVideoMute}
-                onAudioMute={handleAudioMute}
-                onVideoVolumeChange={handleVideoVolumeChange}
-                onAudioVolumeChange={handleAudioVolumeChange}
-                playbackSpeed={playbackSpeed}
-                onSpeedChange={handleSpeedChange}
-                trimStart={trimStart}
-                trimEnd={trimEnd}
-                onTrimChange={handleTrimChange}
-                playing={playing}
-                subtitles={subtitles.result.subtitles}
-              />
-            </TimelineContainer>
-          </>
+          </motion.div>
         )}
-      </MainContent>
-      <Sidebar
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        prompt={prompt}
-        onPromptChange={handlePromptChange}
-        subtitles={subtitles}
-        onSubtitlesChange={handleSubtitlesChange}
-        onFileUpload={handleFileUpload}
-        currentTime={timelinePosition}
-        videoMuted={videoMuted}
-        onVideoMute={handleVideoMute}
-        videoVolume={videoVolume}
-        onVideoVolumeChange={handleVideoVolumeChange}
-        audioMuted={audioMuted}
-        onAudioMute={handleAudioMute}
-        audioVolume={audioVolume}
-        onAudioVolumeChange={handleAudioVolumeChange}
-      />
-    </EditorContainer>
+      </EditorContainer>
+    </>
   );
 }

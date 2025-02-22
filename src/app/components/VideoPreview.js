@@ -16,48 +16,27 @@ const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
 const PreviewContainer = styled(motion.div)(({ theme }) => ({
   position: 'relative',
   width: '100%',
-  height: '55vh',
-  backgroundColor: '#0a1929',
-  borderRadius: '8px',
+  aspectRatio: '16/9',
+  borderRadius: '12px',
   overflow: 'hidden',
-  display: 'flex',
-  flexDirection: 'column',
+  backgroundColor: 'rgba(10, 25, 41, 0.7)',
+  backdropFilter: 'blur(12px)',
+  border: '1px solid rgba(255, 255, 255, 0.1)',
+  boxShadow: '0 4px 24px rgba(0, 0, 0, 0.2)',
 }));
 
 const PlayerContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
-  flex: 1,
   width: '100%',
-  backgroundColor: '#000',
+  height: '100%',
   '& > div': {
     position: 'absolute',
     top: 0,
     left: 0,
-    width: '100%',
-    height: '100%',
   },
 }));
 
-const PlayPauseButton = styled(IconButton)(({ theme }) => ({
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  backgroundColor: 'rgba(0, 0, 0, 0.6)',
-  color: '#fff',
-  '&:hover': {
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-  },
-  width: '60px',
-  height: '60px',
-  '& svg': {
-    fontSize: '2rem',
-  },
-  opacity: 0,
-  transition: 'opacity 0.2s ease-in-out',
-}));
-
-const ControlsOverlay = styled(Box)(({ theme }) => ({
+const ControlsOverlay = styled(motion.div)(({ theme }) => ({
   position: 'absolute',
   top: 0,
   left: 0,
@@ -66,13 +45,26 @@ const ControlsOverlay = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  background: 'transparent',
-  transition: 'background 0.2s ease-in-out',
+  background: 'linear-gradient(to top, rgba(0,0,0,0.5) 0%, transparent 50%, rgba(0,0,0,0.3) 100%)',
+  opacity: 0,
+  transition: 'opacity 0.3s ease',
   '&:hover': {
-    background: 'rgba(0, 0, 0, 0.3)',
-    '& .play-pause-button': {
-      opacity: 1,
-    },
+    opacity: 1,
+  },
+}));
+
+const PlayPauseButton = styled(IconButton)(({ theme }) => ({
+  width: '64px',
+  height: '64px',
+  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  backdropFilter: 'blur(8px)',
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  '&:hover': {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  '& svg': {
+    fontSize: '32px',
+    color: 'white',
   },
 }));
 
@@ -193,8 +185,8 @@ export default function VideoPreview({
 
   return (
     <PreviewContainer
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
       <Typography 
@@ -206,6 +198,9 @@ export default function VideoPreview({
           alignItems: 'center',
           gap: 1,
           fontFamily: 'var(--font-poppins)',
+          position: 'absolute',
+          top: 16,
+          left: 16,
         }}
       >
         <MovieIcon sx={{ color: '#2196f3' }} />
@@ -218,29 +213,27 @@ export default function VideoPreview({
             <ReactPlayer
               ref={playerRef}
               url={videoUrl}
+              playing={playing}
+              controls={false}
               width="100%"
               height="100%"
-              playing={playing}
+              onProgress={handleProgress}
+              progressInterval={100}
               muted={videoMuted}
               volume={videoVolume}
-              onProgress={handleProgress}
-              onEnded={handleVideoEnded}
-              onError={(error) => {
-                console.error('Video playback error:', error);
-                onPlayPause?.(false);
-              }}
+              playbackRate={1}
             />
-            <ControlsOverlay>
-              <PlayPauseButton 
-                className="play-pause-button"
-                onClick={handlePlayPause} 
-                size="small"
-                disabled={audioUrl && !isAudioReady}
-              >
-                {playing ? <PauseIcon /> : <PlayArrowIcon />}
-              </PlayPauseButton>
-            </ControlsOverlay>
           </PlayerContainer>
+          <ControlsOverlay
+            initial={false}
+            animate={{ opacity: playing ? 0 : 1 }}
+            whileHover={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            <PlayPauseButton onClick={() => onPlayPause(!playing)}>
+              {playing ? <PauseIcon /> : <PlayArrowIcon />}
+            </PlayPauseButton>
+          </ControlsOverlay>
         </>
       ) : (
         <UploadZone
