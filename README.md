@@ -29,6 +29,37 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Docker Setup
+
+You can run the entire application stack using Docker Compose. This will start the Next.js frontend, backend server, and PostgreSQL database.
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### Running with Docker
+
+1. Build and start all services:
+```bash
+docker-compose up --build
+```
+
+2. Access the applications:
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000
+- PostgreSQL Database: localhost:5432
+
+To stop the services:
+```bash
+docker-compose down
+```
+
+To stop the services and remove all data (including database):
+```bash
+docker-compose down -v
+```
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
