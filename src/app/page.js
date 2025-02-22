@@ -5,11 +5,13 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import VideoPreview from './components/VideoPreview';
 import VideoTimeline from './components/VideoTimeline';
 import Sidebar from './components/Sidebar';
+import UploadState from './components/UploadState';
 
 const EditorContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   height: '100vh',
   backgroundColor: '#0a1929',
+  overflow: 'hidden',
 }));
 
 const MainContent = styled(Box)(({ theme }) => ({
@@ -17,8 +19,47 @@ const MainContent = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   padding: '20px',
-  gap: '20px',
+  gap: '12px',
+  height: '100%',
   overflow: 'hidden',
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'radial-gradient(circle at top right, #1a365d40, transparent)',
+    pointerEvents: 'none',
+    zIndex: 0,
+  },
+  '& > *': {
+    position: 'relative',
+    zIndex: 1,
+  },
+}));
+
+const TimelineContainer = styled(Box)(({ theme }) => ({
+  flex: 1,
+  minHeight: 0, // Important for flex child scrolling
+  display: 'flex',
+  flexDirection: 'column',
+  overflow: 'auto', // Enable scrolling
+  '&::-webkit-scrollbar': {
+    width: '8px',
+    height: '8px',
+  },
+  '&::-webkit-scrollbar-track': {
+    background: '#0a1929',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: '#1e3a5f',
+    borderRadius: '4px',
+    '&:hover': {
+      background: '#234876',
+    },
+  },
 }));
 
 export default function VideoEditor() {
@@ -28,7 +69,11 @@ export default function VideoEditor() {
   const [playing, setPlaying] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [prompt, setPrompt] = useState('');
-  const [subtitles, setSubtitles] = useState([]);
+  const [subtitles, setSubtitles] = useState({
+    result: {
+      subtitles: []
+    }
+  });
   const [videoProgress, setVideoProgress] = useState(0);
   const [audioDuration, setAudioDuration] = useState(0);
   const [videoDuration, setVideoDuration] = useState(0);
@@ -42,6 +87,7 @@ export default function VideoEditor() {
   const [trimStart, setTrimStart] = useState(0);
   const [trimEnd, setTrimEnd] = useState(0);
   const playerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (playerRef.current) {
@@ -137,51 +183,96 @@ export default function VideoEditor() {
     }
   }, [videoDuration, trimStart, trimEnd]);
 
-  const handleTrimChange = (start, end) => {
+  const handleTrimChange = useCallback((start, end) => {
     setTrimStart(start);
     setTrimEnd(end);
-    // Ensure current position is within trim bounds
-    if (timelinePosition < start) {
-      handleTimelineSeek(start);
-    } else if (timelinePosition > end) {
-      handleTimelineSeek(end);
-    }
-  };
+  }, []);
 
-  const handleSpeedChange = (speed) => {
-    setPlaybackSpeed(speed);
-  };
-
-  const handleDurationChange = (duration, type) => {
-    if (type === 'video') {
-      setVideoDuration(duration);
-    } else {
-      setAudioDuration(duration);
-    }
-  };
-
-  const handleAudioOffsetChange = (offset) => {
-    setAudioOffset(offset);
-  };
-
-  const handleVideoMute = () => {
+  const handleVideoMute = useCallback(() => {
     setVideoMuted(!videoMuted);
-  };
+  }, [videoMuted]);
 
-  const handleAudioMute = () => {
+  const handleAudioMute = useCallback(() => {
     setAudioMuted(!audioMuted);
-  };
+  }, [audioMuted]);
 
-  const handleVideoVolumeChange = (_, newValue) => {
-    setVideoVolume(newValue);
-  };
+  const handleVideoVolumeChange = useCallback((event, value) => {
+    setVideoVolume(value);
+  }, []);
 
-  const handleAudioVolumeChange = (_, newValue) => {
-    setAudioVolume(newValue);
-  };
+  const handleAudioVolumeChange = useCallback((event, value) => {
+    setAudioVolume(value);
+  }, []);
+
+  const handleSpeedChange = useCallback((value) => {
+    setPlaybackSpeed(value);
+  }, []);
+
+  const handleDrop = useCallback((event) => {
+    event.preventDefault();
+    handleFileUpload(event);
+  }, []);
+
+  const handleDragOver = useCallback((event) => {
+    event.preventDefault();
+  }, []);
 
   return (
     <EditorContainer>
+      <MainContent>
+        {!videoUrl ? (
+          <UploadState
+            onUpload={handleFileUpload}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            fileInputRef={fileInputRef}
+          />
+        ) : (
+          <>
+            <VideoPreview
+              videoUrl={videoUrl}
+              audioUrl={audioUrl}
+              playing={playing}
+              onPlayPause={handlePlayPause}
+              onProgress={handleVideoProgress}
+              playerRef={playerRef}
+              onFileUpload={handleFileUpload}
+              currentTime={timelinePosition}
+              videoMuted={videoMuted}
+              audioMuted={audioMuted}
+              videoVolume={videoVolume}
+              audioVolume={audioVolume}
+            />
+            <TimelineContainer>
+              <VideoTimeline
+                videoUrl={videoUrl}
+                audioUrl={audioUrl}
+                currentTime={timelinePosition}
+                videoDuration={videoDuration}
+                audioDuration={audioDuration}
+                onSeek={handleTimelineSeek}
+                onDurationChange={setVideoDuration}
+                onAudioOffsetChange={setAudioOffset}
+                videoMuted={videoMuted}
+                audioMuted={audioMuted}
+                videoVolume={videoVolume}
+                audioVolume={audioVolume}
+                onVideoMute={handleVideoMute}
+                onAudioMute={handleAudioMute}
+                onVideoVolumeChange={handleVideoVolumeChange}
+                onAudioVolumeChange={handleAudioVolumeChange}
+                playbackSpeed={playbackSpeed}
+                onSpeedChange={handleSpeedChange}
+                trimStart={trimStart}
+                trimEnd={trimEnd}
+                onTrimChange={handleTrimChange}
+                playing={playing}
+                subtitles={subtitles.result.subtitles}
+              />
+            </TimelineContainer>
+          </>
+        )}
+      </MainContent>
       <Sidebar
         activeTab={activeTab}
         onTabChange={handleTabChange}
@@ -191,53 +282,15 @@ export default function VideoEditor() {
         onSubtitlesChange={handleSubtitlesChange}
         onFileUpload={handleFileUpload}
         currentTime={timelinePosition}
+        videoMuted={videoMuted}
+        onVideoMute={handleVideoMute}
+        videoVolume={videoVolume}
+        onVideoVolumeChange={handleVideoVolumeChange}
+        audioMuted={audioMuted}
+        onAudioMute={handleAudioMute}
+        audioVolume={audioVolume}
+        onAudioVolumeChange={handleAudioVolumeChange}
       />
-      <MainContent>
-        <VideoPreview
-          videoUrl={videoUrl}
-          audioUrl={audioUrl}
-          playing={playing}
-          onPlayPause={handlePlayPause}
-          onProgress={handleVideoProgress}
-          playerRef={playerRef}
-          onFileUpload={handleFileUpload}
-          currentTime={timelinePosition - audioOffset}
-          videoMuted={videoMuted}
-          audioMuted={audioMuted}
-          videoVolume={videoVolume}
-          audioVolume={audioVolume}
-          playbackSpeed={playbackSpeed}
-          trimStart={trimStart}
-          trimEnd={trimEnd}
-        />
-        <Box sx={{ flex: 1, minHeight: 0, position: 'relative' }}>
-          <VideoTimeline
-            videoUrl={videoUrl}
-            audioUrl={audioUrl}
-            audioFileName={audioFileName}
-            currentTime={timelinePosition}
-            videoDuration={videoDuration}
-            audioDuration={audioDuration}
-            onSeek={handleTimelineSeek}
-            onDurationChange={handleDurationChange}
-            onAudioOffsetChange={handleAudioOffsetChange}
-            videoMuted={videoMuted}
-            audioMuted={audioMuted}
-            videoVolume={videoVolume}
-            audioVolume={audioVolume}
-            onVideoMute={handleVideoMute}
-            onAudioMute={handleAudioMute}
-            onVideoVolumeChange={handleVideoVolumeChange}
-            onAudioVolumeChange={handleAudioVolumeChange}
-            playbackSpeed={playbackSpeed}
-            onSpeedChange={handleSpeedChange}
-            trimStart={trimStart}
-            trimEnd={trimEnd}
-            onTrimChange={handleTrimChange}
-            playing={playing}
-          />
-        </Box>
-      </MainContent>
     </EditorContainer>
   );
 }

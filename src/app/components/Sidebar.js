@@ -1,6 +1,6 @@
 'use client';
 
-import { Box, Typography, TextField, Tab, Tabs, AppBar, Toolbar, IconButton, Divider } from '@mui/material';
+import { Box, Typography, TextField, Tab, Tabs, AppBar, Toolbar, IconButton, Divider, Slider } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import React, { useState, useEffect } from 'react';
 import AddIcon from '@mui/icons-material/Add';
@@ -15,28 +15,80 @@ import TuneIcon from '@mui/icons-material/Tune';
 import EditIcon from '@mui/icons-material/Edit';
 import SaveIcon from '@mui/icons-material/Save';
 import DeleteIcon from '@mui/icons-material/Delete';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
 const SIDEBAR_WIDTH = 540;
 
 const SidebarContainer = styled(Box)(({ theme }) => ({
-  width: SIDEBAR_WIDTH,
+  width: '400px',
+  height: '100%',
   backgroundColor: '#0a1929',
-  borderRight: '1px solid #1e3a5f',
+  borderLeft: '1px solid #1e3a5f',
   display: 'flex',
   flexDirection: 'column',
-  position: 'relative',
-  overflow: 'hidden',
-  height: '100vh',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: '100%',
-    background: 'radial-gradient(circle at top right, #1a365d40, transparent)',
-    pointerEvents: 'none',
-  }
+}));
+
+const TabsContainer = styled(Box)(({ theme }) => ({
+  borderBottom: '1px solid #1e3a5f',
+}));
+
+const ContentContainer = styled(Box)(({ theme }) => ({
+  flex: 1,
+  overflow: 'auto',
+  '&::-webkit-scrollbar': {
+    width: '8px',
+  },
+  '&::-webkit-scrollbar-track': {
+    background: '#0a1929',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: '#1e3a5f',
+    borderRadius: '4px',
+    '&:hover': {
+      background: '#234876',
+    },
+  },
+}));
+
+const SubtitlesContainer = styled(Box)(({ theme }) => ({
+  padding: '20px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '16px',
+}));
+
+const AudioControlsContainer = styled(Box)(({ theme }) => ({
+  padding: '20px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '24px',
+}));
+
+const VolumeControl = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  padding: '12px',
+  backgroundColor: '#132f4c',
+  borderRadius: '8px',
+  border: '1px solid #1e3a5f',
+}));
+
+const VolumeSlider = styled(Slider)(({ theme }) => ({
+  color: '#90caf9',
+  '& .MuiSlider-rail': {
+    backgroundColor: '#1e3a5f',
+  },
+  '& .MuiSlider-track': {
+    backgroundColor: '#2196f3',
+  },
+  '& .MuiSlider-thumb': {
+    backgroundColor: '#90caf9',
+    '&:hover, &.Mui-focusVisible': {
+      boxShadow: '0 0 0 8px rgba(144, 202, 249, 0.16)',
+    },
+  },
 }));
 
 const StyledTab = styled(Tab)(({ theme }) => ({
@@ -161,28 +213,6 @@ const ButtonText = styled(Typography)(({ theme }) => ({
   fontFamily: 'var(--font-poppins)',
 }));
 
-const SubtitlesContainer = styled('div')(({ theme }) => ({
-  height: '80vh',
-  backgroundColor: '#132f4c',
-  borderRadius: '8px',
-  padding: theme.spacing(2),
-  overflowY: 'auto',
-  '&::-webkit-scrollbar': {
-    width: '6px',
-  },
-  '&::-webkit-scrollbar-track': {
-    background: '#1e3a5f',
-    borderRadius: '3px',
-  },
-  '&::-webkit-scrollbar-thumb': {
-    background: '#2196f3',
-    borderRadius: '3px',
-    '&:hover': {
-      background: '#1976d2',
-    },
-  },
-}));
-
 const StyledTextField = styled(TextField)(({ theme }) => ({
   marginTop: theme.spacing(1),
   '& .MuiOutlinedInput-root': {
@@ -218,6 +248,14 @@ export default function Sidebar({
   onSubtitlesChange,
   onFileUpload,
   currentTime = 0,
+  videoMuted,
+  onVideoMute,
+  videoVolume,
+  onVideoVolumeChange,
+  audioMuted,
+  onAudioMute,
+  audioVolume,
+  onAudioVolumeChange,
 }) {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editValues, setEditValues] = useState({
@@ -374,45 +412,78 @@ export default function Sidebar({
         </Toolbar>
       </AppBar>
 
-      <Tabs
-        value={activeTab}
-        onChange={onTabChange}
-        sx={{
-          borderBottom: 1,
-          borderColor: '#1e3a5f',
-          '& .MuiTabs-indicator': {
-            backgroundColor: '#2196f3',
-          },
-          mb: 1,
-        }}
-      >
-        <StyledTab icon={tabIcons[0]} label="Prompt" />
-        <StyledTab icon={tabIcons[1]} label="Subtitles" />
-        <StyledTab icon={tabIcons[2]} label="Summary" />
-      </Tabs>
-
-      <Box sx={{ p: 1, flex: 1, overflowY: 'auto' }}>
+      <TabsContainer>
+        <Tabs 
+          value={activeTab} 
+          onChange={onTabChange}
+          variant="fullWidth"
+          sx={{
+            minHeight: '48px',
+            '& .MuiTab-root': {
+              color: '#64b5f6',
+              minHeight: '48px',
+              '&.Mui-selected': {
+                color: '#90caf9',
+              },
+            },
+            '& .MuiTabs-indicator': {
+              backgroundColor: '#2196f3',
+            },
+          }}
+        >
+          <Tab label="Audio" />
+          <Tab label="Subtitles" />
+          <Tab label="Transform" />
+        </Tabs>
+      </TabsContainer>
+      
+      <ContentContainer>
         {activeTab === 0 && (
-          <>
-            <ButtonList>
-              {toolbarItems.map((item, index) => (
-                <ButtonItem key={index}>
-                  {item.icon}
-                  <ButtonText>{item.text}</ButtonText>
-                </ButtonItem>
-              ))}
-            </ButtonList>
-            <StyledTextField
-              fullWidth
-              multiline
-              rows={6}
-              value={prompt}
-              onChange={onPromptChange}
-              placeholder="Enter your prompt here..."
-              variant="outlined"
-            />
-          </>
+          <AudioControlsContainer>
+            <VolumeControl>
+              <IconButton 
+                size="small" 
+                onClick={onVideoMute}
+                sx={{ color: videoMuted ? '#64b5f6' : '#90caf9' }}
+              >
+                {videoMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+              </IconButton>
+              <Typography sx={{ color: '#90caf9', minWidth: '80px' }}>
+                Video Volume
+              </Typography>
+              <VolumeSlider
+                value={videoVolume}
+                onChange={onVideoVolumeChange}
+                min={0}
+                max={1}
+                step={0.1}
+                disabled={videoMuted}
+              />
+            </VolumeControl>
+
+            <VolumeControl>
+              <IconButton 
+                size="small"
+                onClick={onAudioMute}
+                sx={{ color: audioMuted ? '#64b5f6' : '#90caf9' }}
+              >
+                {audioMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+              </IconButton>
+              <Typography sx={{ color: '#90caf9', minWidth: '80px' }}>
+                Audio Volume
+              </Typography>
+              <VolumeSlider
+                value={audioVolume}
+                onChange={onAudioVolumeChange}
+                min={0}
+                max={1}
+                step={0.1}
+                disabled={audioMuted}
+              />
+            </VolumeControl>
+          </AudioControlsContainer>
         )}
+        
         {activeTab === 1 && (
           <SubtitlesContainer>
             {subtitlesList.result.subtitles.map((subtitle, index) => (
@@ -476,8 +547,9 @@ export default function Sidebar({
             ))}
           </SubtitlesContainer>
         )}
+        
         {activeTab === 2 && (
-          <Box>
+          <Box p={2}>
             <Typography variant="h6" sx={{ color: '#90caf9', mb: 2, fontFamily: 'var(--font-poppins)', fontWeight: 500 }}>
               Video Summary
             </Typography>
@@ -493,7 +565,7 @@ export default function Sidebar({
             />
           </Box>
         )}
-      </Box>
+      </ContentContainer>
 
       <Divider sx={{ borderColor: '#1e3a5f', my: 2 }} />
     </SidebarContainer>

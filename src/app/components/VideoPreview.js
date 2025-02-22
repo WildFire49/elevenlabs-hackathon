@@ -14,26 +14,66 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 const ReactPlayer = dynamic(() => import('react-player'), { ssr: false });
 
 const PreviewContainer = styled(motion.div)(({ theme }) => ({
-  flex: 1,
-  backgroundColor: '#0a1929',
   position: 'relative',
+  width: '100%',
+  height: '55vh',
+  backgroundColor: '#0a1929',
+  borderRadius: '8px',
+  overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
-  gap: '20px',
-  padding: '20px',
-  minHeight: '50vh',
-  borderRadius: '12px',
-  '&::before': {
-    content: '""',
+}));
+
+const PlayerContainer = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  flex: 1,
+  width: '100%',
+  backgroundColor: '#000',
+  '& > div': {
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
+    width: '100%',
     height: '100%',
-    background: 'radial-gradient(circle at top right, #1a365d40, transparent)',
-    pointerEvents: 'none',
-    borderRadius: '12px',
-  }
+  },
+}));
+
+const PlayPauseButton = styled(IconButton)(({ theme }) => ({
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  backgroundColor: 'rgba(0, 0, 0, 0.6)',
+  color: '#fff',
+  '&:hover': {
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+  },
+  width: '60px',
+  height: '60px',
+  '& svg': {
+    fontSize: '2rem',
+  },
+  opacity: 0,
+  transition: 'opacity 0.2s ease-in-out',
+}));
+
+const ControlsOverlay = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'transparent',
+  transition: 'background 0.2s ease-in-out',
+  '&:hover': {
+    background: 'rgba(0, 0, 0, 0.3)',
+    '& .play-pause-button': {
+      opacity: 1,
+    },
+  },
 }));
 
 const UploadZone = styled(Paper)(({ theme }) => ({
@@ -52,26 +92,6 @@ const UploadZone = styled(Paper)(({ theme }) => ({
     borderColor: '#90caf9',
     transform: 'scale(1.02)',
   }
-}));
-
-const PlayerContainer = styled(Box)(({ theme }) => ({
-  position: 'relative',
-  aspectRatio: '16/9',
-  width: '100%',
-  backgroundColor: '#132f4c',
-  borderRadius: '8px',
-  overflow: 'hidden',
-  border: '1px solid #1e3a5f',
-}));
-
-const Controls = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '16px',
-  padding: '12px',
-  backgroundColor: '#132f4c',
-  borderRadius: '8px',
-  border: '1px solid #1e3a5f',
 }));
 
 const StyledIconButton = styled(IconButton)(({ theme }) => ({
@@ -210,16 +230,17 @@ export default function VideoPreview({
                 onPlayPause?.(false);
               }}
             />
+            <ControlsOverlay>
+              <PlayPauseButton 
+                className="play-pause-button"
+                onClick={handlePlayPause} 
+                size="small"
+                disabled={audioUrl && !isAudioReady}
+              >
+                {playing ? <PauseIcon /> : <PlayArrowIcon />}
+              </PlayPauseButton>
+            </ControlsOverlay>
           </PlayerContainer>
-          <Controls>
-            <StyledIconButton 
-              onClick={handlePlayPause} 
-              size="small"
-              disabled={audioUrl && !isAudioReady}
-            >
-              {playing ? <PauseIcon /> : <PlayArrowIcon />}
-            </StyledIconButton>
-          </Controls>
         </>
       ) : (
         <UploadZone
