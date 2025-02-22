@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@cesdk/cesdk-js": "^1.45.0",
     "@radix-ui/react-progress": "^1.1.2",
     "@radix-ui/react-slider": "^1.2.3",
     "@radix-ui/react-slot": "^1.1.2",
@@ -18,6 +19,7 @@
     "@shadcn/ui": "^0.0.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "etro": "^0.12.1",
     "lucide-react": "^0.475.0",
     "next": "15.1.7",
     "react": "^19.0.0",

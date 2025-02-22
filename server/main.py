@@ -1,14 +1,18 @@
 import logging
 import os
 import cuid
+import json
+import subprocess
 from mutagen.mp3 import MP3
 import urllib
+from typing import List, Dict
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, UploadFile, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from pydantic import BaseModel
 
 from tts.elevenlabs_tts_processor import ElevenLabsTTSProcessor
 from utils.db import get_db_cursor
@@ -164,4 +168,137 @@ async def get_audio(audio_id: str):
         return FileResponse(audio_path, media_type="audio/mpeg")
     except Exception as e:
         logger.error(f"Error serving audio: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+class TranscriptUpdate(BaseModel):
+    video_id: str
+    transcripts: List[Dict[str, str]]
+
+@app.post("/video/{video_id}/update")
+async def update_video(video_id: str, update: TranscriptUpdate):
+    try:
+        video_id = urllib.parse.unquote(video_id).replace("files/", "")
+        logger.info(f"Updating video with ID: {video_id}")
+        
+        logger.info("Creating temporary audio directory")
+        os.makedirs("static/temp_audio/", exist_ok=True)
+        audio_files = []
+        
+        logger.info("Generating audio for each transcript")
+        for transcript in update.transcripts:
+            text = transcript['text']
+            logger.debug(f"Processing text: {text}")
+            audio = elevenlabs_processor.process(text)
+            subtitle_id = cuid.cuid()
+            audio_filename = f"temp_audio_{subtitle_id}.mp3"
+            audio_path = os.path.join("static/temp_audio/", audio_filename)
+            
+            logger.debug(f"Saving audio to {audio_path}")
+            with open(audio_path, "wb") as audio_file:
+                audio_file.write(audio)
+            
+            logger.debug("Getting audio duration and updating transcript timing")
+            audio_file = MP3(audio_path)
+            audio_length = audio_file.info.length
+            audio_files.append({
+                'path': audio_path,
+                'start': transcript['start'],
+                'end': transcript['end']
+            })
+
+        logger.info("Preparing video paths")
+        video_path = os.path.join("static/videos/", f"{video_id}.mp4")
+        output_path = os.path.join("static/videos/", f"{video_id}_with_audio.mp4")
+        temp_path = os.path.join("static/videos/", f"{video_id}_temp.mp4")
+        
+        try:
+            logger.info("Step 1: Extracting video without audio")
+            extract_cmd = [
+                "ffmpeg", "-y",
+                "-i", video_path,
+                "-c:v", "copy",
+                "-an",
+                temp_path
+            ]
+            
+            logger.info(f"Running FFmpeg extract command: {' '.join(extract_cmd)}")
+            subprocess.run(extract_cmd, check=True, capture_output=True, text=True)
+            
+            if audio_files:
+                logger.info("Step 2: Creating complex filter for audio mixing")
+                # Construct FFmpeg command for mixing audio
+                mix_cmd = ["ffmpeg", "-y"]
+                
+                # Add video input first
+                mix_cmd.extend(["-i", temp_path])
+                
+                # Add all audio inputs
+                for audio in audio_files:
+                    mix_cmd.extend(["-i", audio['path']])
+                
+                # Construct filter complex
+                filter_parts = []
+                
+                # Create audio delays for each input
+                for i, audio in enumerate(audio_files, start=1):
+                    # Convert time format from MM:SS to seconds
+                    start_time = sum(x * int(t) for x, t in zip([60, 1], audio['start'].split(":")))
+                    # Add volume adjustment and delay
+                    filter_parts.append(f"[{i}:a]volume=1.0,adelay={int(start_time*1000)}|{int(start_time*1000)}[a{i}]")
+                
+                # Add the mix filter
+                if filter_parts:
+                    filter_parts.append(
+                        "".join(f"[a{i}]" for i in range(1, len(audio_files) + 1)) +
+                        f"amix=inputs={len(audio_files)}:dropout_transition=0:normalize=0[aout]"
+                    )
+                
+                # Join all filter parts with semicolons
+                filter_complex = ";".join(filter_parts)
+                
+                logger.debug(f"Filter complex: {filter_complex}")
+                
+                # Add filter complex to command
+                mix_cmd.extend([
+                    "-filter_complex", filter_complex,
+                    "-map", "0:v",
+                    "-map", "[aout]",
+                    "-c:v", "copy",
+                    "-c:a", "aac",
+                    "-b:a", "256k",
+                    output_path
+                ])
+                
+                logger.info(f"Running FFmpeg mix command: {' '.join(mix_cmd)}")
+                process = subprocess.run(mix_cmd, check=True, capture_output=True, text=True)
+                logger.info(f"FFmpeg stdout: {process.stdout}")
+                logger.error(f"FFmpeg stderr: {process.stderr}")
+                
+                logger.info("Replacing original video with the new one")
+                os.replace(output_path, video_path)
+            else:
+                logger.info("No audio files, using the video without audio")
+                os.replace(temp_path, video_path)
+            
+        except subprocess.CalledProcessError as e:
+            logger.error(f"FFmpeg error: {e.stderr}")
+            return {"success": False, "error": f"Failed to merge audio: {e.stderr}"}
+        finally:
+            logger.info("Cleaning up temporary files")
+            for path in [temp_path] + [audio['path'] for audio in audio_files]:
+                if os.path.exists(path):
+                    os.remove(path)
+                    logger.debug(f"Removed temporary file: {path}")
+        
+        logger.info("Updating transcripts in database")
+        with get_db_cursor() as cursor:
+            cursor.execute(
+                "UPDATE videos SET transcripts = %s WHERE video_id = %s",
+                (json.dumps(update.transcripts), video_id)
+            )
+        
+        logger.info("Video update completed successfully")
+        return {"success": True, "message": "Video updated successfully"}
+    except Exception as e:
+        logger.error(f"Error updating video: {str(e)}")
         return {"success": False, "error": str(e)}
