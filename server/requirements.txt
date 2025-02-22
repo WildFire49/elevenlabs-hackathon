@@ -4,6 +4,7 @@ cachetools==5.5.2
 certifi==2025.1.31
 charset-normalizer==3.4.1
 click==8.1.8
+cuid==0.4
 elevenlabs==1.51.0
 fastapi==0.115.8
 google-auth==2.38.0
