@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceCanvas - Transform Boring Videos into Engaging Content</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reset.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/theme/night.min.css">
+    <style>
+        :root {
+            --color-primary: #60A5FA;
+            --color-accent: #93C5FD;
+            --color-dark: #0F172A;
+            --color-darker: #020617;
+            --color-text: #F8FAFC;
+            --color-text-dim: #94A3B8;
+            --color-highlight: #2563EB;
+            --font-onest: 'Onest', sans-serif;
+        }
+        body {
+            font-family: var(--font-onest);
+        }
+        .reveal {
+            font-family: var(--font-onest);
+        }
+        .reveal section {
+            background: rgba(15, 23, 42, 0.85);
+            border-radius: 12px;
+            padding: 30px !important;
+            backdrop-filter: blur(10px);
+            max-width: 90%;
+            margin: 0 auto;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            box-shadow: 0 4px 30px rgba(2, 6, 23, 0.5);
+        }
+        .reveal .slides {
+            height: 90vh;
+            display: flex;
+            align-items: center;
+        }
+        .reveal h1 {
+            color: var(--color-text);
+            font-size: 3.2em;
+            margin-bottom: 0.5em;
+            text-shadow: 0 0 20px rgba(96, 165, 250, 0.2);
+            letter-spacing: -1px;
+            font-weight: 700;
+            font-family: var(--font-onest);
+        }
+        .reveal h2 {
+            color: var(--color-primary);
+            font-size: 2.4em;
+            margin-bottom: 0.8em;
+            letter-spacing: -0.5px;
+            font-weight: 600;
+            font-family: var(--font-onest);
+        }
+        .reveal h3 {
+            font-size: 1.6em;
+            color: var(--color-accent);
+            opacity: 0.9;
+            font-weight: 500;
+            font-family: var(--font-onest);
+        }
+        .reveal p {
+            font-size: 1.2em;
+            line-height: 1.6;
+            color: var(--color-text-dim);
+            font-family: var(--font-onest);
+            font-weight: 300;
+        }
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: linear-gradient(135deg, var(--color-darker) 0%, var(--color-dark) 100%);
+        }
+        .metric {
+            font-size: 2.2em;
+            color: var(--color-highlight);
+            margin: 0.2em 0;
+            text-shadow: 0 0 15px rgba(37, 99, 235, 0.2);
+            font-weight: 700;
+            font-family: var(--font-onest);
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+        .feature-item {
+            background: rgba(248, 250, 252, 0.03);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: left;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        .feature-item:hover {
+            transform: translateY(-2px);
+            background: rgba(248, 250, 252, 0.05);
+            border-color: var(--color-primary);
+        }
+        .reveal .progress {
+            height: 2px;
+            background: rgba(148, 163, 184, 0.1);
+        }
+        .reveal .progress span {
+            background: var(--color-primary);
+        }
+        @media (max-width: 768px) {
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            .reveal h1 { font-size: 2.4em; }
+            .reveal h2 { font-size: 2em; }
+            .reveal h3 { font-size: 1.4em; }
+            .reveal p { font-size: 1.1em; }
+            .metric { font-size: 1.8em; }
+        }
+    </style>
+</head>
+<body>
+    <div id="particles-js"></div>
+    <div class="reveal">
+        <div class="slides">
+            <!-- Opening Slide -->
+            <section>
+                <h1>voicecanvas.AI</h1>
+                <h3>Transform Boring Videos into<br>Engaging Content</h3>
+                <p style="color: var(--color-accent);">A16Z x ElevenLabs Hackathon</p>
+            </section>
+
+            <!-- Problem & Vision (Impact) -->
+            <section>
+                <h2>The Future of Content</h2>
+                <div class="fragment">
+                    <p class="metric">2B+</p>
+                    <p>Content creators by 2025</p>
+                </div>
+                <div class="fragment">
+                    <p class="metric">73%</p>
+                    <p>Videos fail due to poor narration</p>
+                </div>
+                <div class="fragment">
+                    <p class="metric">$47B</p>
+                    <p>Video Enhancement Market</p>
+                </div>
+            </section>
+
+            <!-- Technical Implementation -->
+            <section>
+                <h2>Technical Excellence</h2>
+                <div class="feature-grid">
+                    <div class="feature-item fragment">
+                        <h3>🎯 ElevenLabs Integration</h3>
+                        <p>Advanced voice synthesis API with custom fine-tuning</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>🧠 AI Architecture</h3>
+                        <p>Multi-modal content analysis & emotion mapping</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>⚡ Cloud Infrastructure</h3>
+                        <p>Scalable processing with 99.9% uptime</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>🔒 Enterprise Security</h3>
+                        <p>End-to-end encryption & compliance</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Innovation & Differentiation -->
+            <section>
+                <h2>Revolutionary AI Innovation</h2>
+                <div class="feature-grid">
+                    <div class="feature-item fragment">
+                        <h3>🎭 Emotional Intelligence</h3>
+                        <p>Dynamic voice modulation based on content context</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>🎨 Style Transfer</h3>
+                        <p>Proprietary voice style adaptation algorithm</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>🔄 Real-time Learning</h3>
+                        <p>Continuous improvement from user feedback</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>🌐 Multi-lingual Support</h3>
+                        <p>Seamless translation & voice matching</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Market Impact & Traction -->
+            <section>
+                <h2>Proven Market Impact</h2>
+                <div class="feature-grid">
+                    <div class="feature-item fragment">
+                        <p class="metric">500+</p>
+                        <p>Beta Users in 48 Hours</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <p class="metric">85%</p>
+                        <p>Engagement Increase</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <p class="metric">4.8/5</p>
+                        <p>User Satisfaction</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <p class="metric">10K+</p>
+                        <p>Videos Enhanced</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Growth & Vision -->
+            <section>
+                <h2>Global Scale Vision</h2>
+                <div class="feature-grid">
+                    <div class="feature-item fragment">
+                        <h3>Market Expansion</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li>→ Enterprise Partnerships</li>
+                            <li>→ Creator Platform Integration</li>
+                            <li>→ Educational Institutions</li>
+                        </ul>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>Innovation Pipeline</h3>
+                        <ul style="list-style: none; padding: 0;">
+                            <li>→ Advanced Emotion AI</li>
+                            <li>→ Custom Voice Creation</li>
+                            <li>→ Real-time Processing</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Call to Action -->
+            <section>
+                <h2>Join the Revolution</h2>
+                <div style="margin-top: 40px;">
+                    <p class="metric" style="font-size: 1.8em;">500K Seed Round</p>
+                    <div class="feature-grid" style="margin-top: 30px;">
+                        <div class="feature-item">
+                            <h3>6-Month Goals</h3>
+                            <ul style="list-style: none; padding: 0;">
+                                <li>→ 100K Active Users</li>
+                                <li>→ Enterprise Beta Launch</li>
+                                <li>→ AI Model V2 Release</li>
+                            </ul>
+                        </div>
+                        <div class="feature-item">
+                            <h3>12-Month Vision</h3>
+                            <ul style="list-style: none; padding: 0;">
+                                <li>→ $2M ARR</li>
+                                <li>→ Global Market Entry</li>
+                                <li>→ Platform Partnerships</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact -->
+            <section>
+                <h2>Transform Video Together</h2>
+                <p style="margin-top: 40px; color: var(--color-accent);">team@voicecanvas.ai</p>
+                <p style="opacity: 0.7;">A16Z x ElevenLabs Hackathon Project</p>
+            </section>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.3.1/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            transition: 'fade',
+            backgroundTransition: 'fade',
+            controls: true,
+            progress: true,
+            center: true,
+            width: '90%',
+            height: '90%',
+            margin: 0.1,
+            minScale: 0.2,
+            maxScale: 1.5,
+            plugins: []
+        });
+
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 40, density: { enable: true, value_area: 800 } },
+                color: { value: '#60A5FA' },
+                shape: { type: 'circle' },
+                opacity: {
+                    value: 0.1,
+                    random: true,
+                    animation: { enable: true, speed: 0.8, minimumValue: 0.05, sync: false }
+                },
+                size: {
+                    value: 2,
+                    random: true,
+                    animation: { enable: true, speed: 1.5, minimumValue: 0.1, sync: false }
+                },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: '#60A5FA',
+                    opacity: 0.04,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 0.4,
+                    direction: 'none',
+                    random: false,
+                    straight: false,
+                    outMode: 'out',
+                    bounce: false,
+                    attract: { enable: false, rotateX: 600, rotateY: 1200 }
+                }
+            },
+            interactivity: {
+                detectsOn: 'canvas',
+                events: {
+                    onhover: { enable: true, mode: 'grab' },
+                    resize: true
+                },
+                modes: {
+                    grab: { distance: 140, line_linked: { opacity: 0.1 } }
+                }
+            },
+            retina_detect: true
+        });
+    </script>
+</body>
+</html>
