@@ -107,19 +107,19 @@
                 const data = await response.json();
                 document.getElementById('response').textContent = JSON.stringify(data, null, 2);
                 
-                if (data.success && data.result && data.result.result.subtitles) {
+                if (data.success && data.result && data.result.subtitles) {
                     const subtitlesContainer = document.getElementById('subtitlesContainer');
                     subtitlesContainer.innerHTML = '<h3>Subtitles with Audio:</h3>';
                     
-                    data.result.result.subtitles.forEach((subtitle, index) => {
+                    data.result.subtitles.forEach((subtitle, index) => {
                         const subtitleDiv = document.createElement('div');
                         subtitleDiv.className = 'subtitle-container';
                         subtitleDiv.innerHTML = `
                             <p><strong>Time:</strong> ${subtitle.start} - ${subtitle.end}</p>
                             <p><strong>Text:</strong> ${subtitle.text}</p>
-                            ${subtitle.audio ? `
+                            ${subtitle.audio_id ? `
                                 <audio class="audio-player" controls>
-                                    <source src="${subtitle.audio}" type="audio/mpeg">
+                                    <source src="/audio/${subtitle.audio_id}" type="audio/mpeg">
                                     Your browser does not support the audio element.
                                 </audio>
                             ` : ''}
