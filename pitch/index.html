@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,12 +22,15 @@
             --color-highlight: #2563EB;
             --font-onest: 'Onest', sans-serif;
         }
+
         body {
             font-family: var(--font-onest);
         }
+
         .reveal {
             font-family: var(--font-onest);
         }
+
         .reveal section {
             background: rgba(15, 23, 42, 0.85);
             border-radius: 12px;
@@ -36,12 +40,17 @@
             margin: 0 auto;
             border: 1px solid rgba(148, 163, 184, 0.1);
             box-shadow: 0 4px 30px rgba(2, 6, 23, 0.5);
+            overflow-y: auto;
+            max-height: 85vh;
         }
+
         .reveal .slides {
             height: 90vh;
             display: flex;
             align-items: center;
+            width: 100% !important;
         }
+
         .reveal h1 {
             color: var(--color-text);
             font-size: 3.2em;
@@ -51,6 +60,7 @@
             font-weight: 700;
             font-family: var(--font-onest);
         }
+
         .reveal h2 {
             color: var(--color-primary);
             font-size: 2.4em;
@@ -59,6 +69,7 @@
             font-weight: 600;
             font-family: var(--font-onest);
         }
+
         .reveal h3 {
             font-size: 1.6em;
             color: var(--color-accent);
@@ -66,6 +77,7 @@
             font-weight: 500;
             font-family: var(--font-onest);
         }
+
         .reveal p {
             font-size: 1.2em;
             line-height: 1.6;
@@ -73,6 +85,7 @@
             font-family: var(--font-onest);
             font-weight: 300;
         }
+
         #particles-js {
             position: fixed;
             top: 0;
@@ -82,6 +95,7 @@
             z-index: -1;
             background: linear-gradient(135deg, var(--color-darker) 0%, var(--color-dark) 100%);
         }
+
         .metric {
             font-size: 2.2em;
             color: var(--color-highlight);
@@ -90,6 +104,7 @@
             font-weight: 700;
             font-family: var(--font-onest);
         }
+
         .feature-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -97,6 +112,7 @@
             margin-top: 20px;
             font-size: 0.9em;
         }
+
         .feature-item {
             background: rgba(248, 250, 252, 0.03);
             padding: 20px;
@@ -105,181 +121,215 @@
             transition: all 0.3s ease;
             border: 1px solid rgba(148, 163, 184, 0.1);
         }
+
         .feature-item:hover {
             transform: translateY(-2px);
             background: rgba(248, 250, 252, 0.05);
             border-color: var(--color-primary);
         }
+
         .reveal .progress {
             height: 2px;
             background: rgba(148, 163, 184, 0.1);
         }
+
         .reveal .progress span {
             background: var(--color-primary);
         }
+
         @media (max-width: 768px) {
             .feature-grid {
                 grid-template-columns: 1fr;
             }
-            .reveal h1 { font-size: 2.4em; }
-            .reveal h2 { font-size: 2em; }
-            .reveal h3 { font-size: 1.4em; }
-            .reveal p { font-size: 1.1em; }
-            .metric { font-size: 1.8em; }
+
+            .reveal h1 {
+                font-size: 2em;
+            }
+
+            .reveal h2 {
+                font-size: 1.6em;
+            }
+
+            .reveal h3 {
+                font-size: 1.2em;
+            }
+
+            .reveal p {
+                font-size: 1em;
+            }
+
+            .metric {
+                font-size: 1.6em;
+            }
+
+            .reveal section {
+                padding: 20px !important;
+                max-width: 95%;
+            }
         }
     </style>
 </head>
+
 <body>
     <div id="particles-js"></div>
     <div class="reveal">
         <div class="slides">
             <!-- Opening Slide -->
+            <!-- Opening Slide -->
             <section>
-                <h1>voicecanvas.AI</h1>
-                <h3>Transform Boring Videos into<br>Engaging Content</h3>
+                <h1>VoiceCanvas.AI</h1>
+                <h3>From Static Screen Recordings<br>to Polished Video Experiences</h3>
                 <p style="color: var(--color-accent);">A16Z x ElevenLabs Hackathon</p>
             </section>
 
-            <!-- Problem & Vision (Impact) -->
+            <!-- Core Problem -->
             <section>
-                <h2>The Future of Content</h2>
+                <h2>The Engagement Paradox</h2>
                 <div class="fragment">
-                    <p class="metric">2B+</p>
-                    <p>Content creators by 2025</p>
-                </div>
-                <div class="fragment">
-                    <p class="metric">73%</p>
-                    <p>Videos fail due to poor narration</p>
+                    <p class="metric">92%</p>
+                    <p>Of raw screen recordings fail to retain attention</p>
                 </div>
                 <div class="fragment">
-                    <p class="metric">$47B</p>
-                    <p>Video Enhancement Market</p>
+                    <p class="metric">6.2s</p>
+                    <p>Average gaze duration on static tutorial content</p>
+                </div>
+                <div class="feature-item fragment" style="margin-top:20px">
+                    <h3>💔 The Dual Challenge</h3>
+                    <p>Flat visuals + Robotic narration = Viewer abandonment</p>
                 </div>
             </section>
 
-            <!-- Technical Implementation -->
+            <!-- Industry Pain Points -->
             <section>
-                <h2>Technical Excellence</h2>
+                <h2>Universal Content Struggles</h2>
                 <div class="feature-grid">
                     <div class="feature-item fragment">
-                        <h3>🎯 ElevenLabs Integration</h3>
-                        <p>Advanced voice synthesis API with custom fine-tuning</p>
+                        <h3>👩🏫 Education</h3>
+                        <p>Static coding tutorials with monotone explanations</p>
                     </div>
                     <div class="feature-item fragment">
-                        <h3>🧠 AI Architecture</h3>
-                        <p>Multi-modal content analysis & emotion mapping</p>
+                        <h3>🛠️ SaaS Demos</h3>
+                        <p>Feature walkthroughs missing visual focus cues</p>
                     </div>
                     <div class="feature-item fragment">
-                        <h3>⚡ Cloud Infrastructure</h3>
-                        <p>Scalable processing with 99.9% uptime</p>
+                        <h3>🎥 Creator Content</h3>
+                        <p>Raw gameplay recordings without professional polish</p>
                     </div>
                     <div class="feature-item fragment">
-                        <h3>🔒 Enterprise Security</h3>
-                        <p>End-to-end encryption & compliance</p>
+                        <h3>🏢 Enterprise Training</h3>
+                        <p>Software tutorials lacking visual dynamism</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Innovation & Differentiation -->
+            <!-- Solution Showcase -->
             <section>
-                <h2>Revolutionary AI Innovation</h2>
+                <h2>Dual Transformation Engine</h2>
                 <div class="feature-grid">
                     <div class="feature-item fragment">
-                        <h3>🎭 Emotional Intelligence</h3>
-                        <p>Dynamic voice modulation based on content context</p>
+                        <h3>🎙️ Vocal Intelligence</h3>
+                        <p>Context-aware narration with emotional modulation</p>
                     </div>
                     <div class="feature-item fragment">
-                        <h3>🎨 Style Transfer</h3>
-                        <p>Proprietary voice style adaptation algorithm</p>
+                        <h3>🎬 Cinematic Motion</h3>
+                        <p>Smart zoom effects highlighting UI interactions</p>
                     </div>
                     <div class="feature-item fragment">
-                        <h3>🔄 Real-time Learning</h3>
-                        <p>Continuous improvement from user feedback</p>
+                        <h3>🤖 Auto-Framing</h3>
+                        <p>Dynamic focus tracking for complex workflows</p>
                     </div>
                     <div class="feature-item fragment">
-                        <h3>🌐 Multi-lingual Support</h3>
-                        <p>Seamless translation & voice matching</p>
+                        <h3>🎚️ Audio-Visual Sync</h3>
+                        <p>Precise timing between vocal emphasis and zoom actions</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Market Impact & Traction -->
+            <!-- Technical Breakdown -->
             <section>
-                <h2>Proven Market Impact</h2>
+                <h2>Smart Enhancement Pipeline</h2>
                 <div class="feature-grid">
                     <div class="feature-item fragment">
-                        <p class="metric">500+</p>
-                        <p>Beta Users in 48 Hours</p>
+                        <h3>1. Content Analysis</h3>
+                        <p>Identifies key UI elements and workflow stages</p>
                     </div>
                     <div class="feature-item fragment">
-                        <p class="metric">85%</p>
-                        <p>Engagement Increase</p>
+                        <h3>2. Motion Planning</h3>
+                        <p>Generates camera path for optimal viewing</p>
                     </div>
                     <div class="feature-item fragment">
-                        <p class="metric">4.8/5</p>
-                        <p>User Satisfaction</p>
+                        <h3>3. Vocal Scripting</h3>
+                        <p>Creates emphasis points for narration</p>
                     </div>
                     <div class="feature-item fragment">
-                        <p class="metric">10K+</p>
-                        <p>Videos Enhanced</p>
+                        <h3>4. Synchronized Rendering</h3>
+                        <p>Marries visual effects with vocal delivery</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Growth & Vision -->
+            <!-- Industry Impact -->
             <section>
-                <h2>Global Scale Vision</h2>
+                <h2>Transformation in Action</h2>
                 <div class="feature-grid">
                     <div class="feature-item fragment">
-                        <h3>Market Expansion</h3>
-                        <ul style="list-style: none; padding: 0;">
-                            <li>→ Enterprise Partnerships</li>
-                            <li>→ Creator Platform Integration</li>
-                            <li>→ Educational Institutions</li>
-                        </ul>
+                        <h3>📊 Data Science Tutorials</h3>
+                        <p>Code walkthroughs with focused zooms + clear explanations</p>
                     </div>
                     <div class="feature-item fragment">
-                        <h3>Innovation Pipeline</h3>
-                        <ul style="list-style: none; padding: 0;">
-                            <li>→ Advanced Emotion AI</li>
-                            <li>→ Custom Voice Creation</li>
-                            <li>→ Real-time Processing</li>
-                        </ul>
+                        <h3>🖥️ Software Onboarding</h3>
+                        <p>Automatic button highlights with vocal cues</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>🎮 Gaming Content</h3>
+                        <p>Raw gameplay → Director's cut with commentary</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>📱 App Reviews</h3>
+                        <p>Feature showcases with cinematic transitions</p>
                     </div>
                 </div>
             </section>
 
-            <!-- Call to Action -->
+            <!-- Differentiators -->
             <section>
-                <h2>Join the Revolution</h2>
-                <div style="margin-top: 40px;">
-                    <p class="metric" style="font-size: 1.8em;">500K Seed Round</p>
-                    <div class="feature-grid" style="margin-top: 30px;">
+                <h2>Beyond Basic Screen Recording</h2>
+                <div class="feature-grid">
+                    <div class="feature-item fragment">
+                        <h3>🎯 Context-Aware Zoom</h3>
+                        <p>Intelligent focus on relevant UI elements</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>🗣️ Emotion-Mapped Voice</h3>
+                        <p>Excited for features, serious for warnings</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>⏱️ Perfect Timing</h3>
+                        <p>Effects sync with narration pacing</p>
+                    </div>
+                    <div class="feature-item fragment">
+                        <h3>🎨 Consistent Style</h3>
+                        <p>Maintains brand voice across transformations</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Closing Vision -->
+            <section>
+                <h2>Democratizing Professional Production</h2>
+                <div style="margin-top:40px">
+                    <p class="metric" style="font-size:1.6em">From Screen Capture → Studio Quality</p>
+                    <div class="feature-grid" style="margin-top:30px">
                         <div class="feature-item">
-                            <h3>6-Month Goals</h3>
-                            <ul style="list-style: none; padding: 0;">
-                                <li>→ 100K Active Users</li>
-                                <li>→ Enterprise Beta Launch</li>
-                                <li>→ AI Model V2 Release</li>
-                            </ul>
+                            <h3>Before</h3>
+                            <p>Static frames<br>Monotone audio<br>Disengaged viewers</p>
                         </div>
                         <div class="feature-item">
-                            <h3>12-Month Vision</h3>
-                            <ul style="list-style: none; padding: 0;">
-                                <li>→ $2M ARR</li>
-                                <li>→ Global Market Entry</li>
-                                <li>→ Platform Partnerships</li>
-                            </ul>
+                            <h3>After</h3>
+                            <p>Dynamic visuals<br>Expressive narration<br>Captivated audience</p>
                         </div>
                     </div>
                 </div>
-            </section>
-
-            <!-- Contact -->
-            <section>
-                <h2>Transform Video Together</h2>
-                <p style="margin-top: 40px; color: var(--color-accent);">team@voicecanvas.ai</p>
-                <p style="opacity: 0.7;">A16Z x ElevenLabs Hackathon Project</p>
             </section>
         </div>
     </div>
@@ -349,4 +399,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class GeminiVideoProcessor(VideoProcessor):
     def __init__(self):
         self.client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-        self.system_prompt = """You're a professional content writer who creates high quality voiceover text for videos. Given the context of a video and a prompt, you should generate the voiceover text for the video with appropriate timestamps"""
+        self.system_prompt = """You're a professional content writer who creates high quality voiceover text for videos. This is a local demo for voicecanvas dot ai. We are helping users add professional quality voiceovers and effects to their videos. Create transcripts by describing what is going on in the video with user's prompt in mind to make it engaging and witty. DO NOT SIMPLY read what is present"""
 
     def process(self, video_path: str, prompt: str) -> ProcessedVideoResponse:
         try:
@@ -27,7 +27,7 @@ class GeminiVideoProcessor(VideoProcessor):
                 model="gemini-1.5-pro",
                 config=GenerateContentConfig(
                     system_instruction=self.system_prompt,
-                    temperature=0,
+                    temperature=0.5,
                     response_schema=genai.types.Schema(
                         type=genai.types.Type.OBJECT,
                         enum=[],

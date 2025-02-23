@@ -1,27 +1,20 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Onest } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const onest = Onest({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-onest",
 });
 
 export const metadata = {
-  title: "Awesome app",
-  description: "An Awesome app idea",
+  title: "Voice Canvas AI",
+  description: "Voice Canvas AI - Create professional videos with AI",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${onest.variable} antialiased font-onest`}>
         {children}
       </body>
     </html>

@@ -71,7 +71,7 @@ const Hero = ({ isDragging, onDragOver, onDragLeave, onDrop, onWatchDemo }) => {
             <span className="text-sm text-blue-200">AI-Powered Video Enhancement</span>
           </motion.div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white relative leading-[1.1]">
+          <h1 className="text-5xl md:text-7xl font-semibold tracking-tight text-white relative leading-[1.1]">
             <span className="relative inline-block mb-2">
               Transform Boring Videos
             </span>

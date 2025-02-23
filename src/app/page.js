@@ -15,7 +15,6 @@ import { toast } from "sonner";
 const Index = () => {
   const [videoFile, setVideoFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
   const [showDemoVideo, setShowDemoVideo] = useState(false);
 
 
